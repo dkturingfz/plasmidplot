@@ -1,0 +1,44 @@
+LOCUS       pDemo                   1200 bp ds-DNA     circular SYN 01-JAN-2026
+DEFINITION  Synthetic demo plasmid for plasmidplot tests.
+ACCESSION   .
+KEYWORDS    .
+FEATURES             Location/Qualifiers
+     source          1..1200
+                     /organism="synthetic construct"
+     CDS             120..380
+                     /gene="gfp"
+                     /label=GFP
+                     /ApEinfo_fwdcolor="#1baf7a"
+     CDS             complement(430..740)
+                     /gene="kan"
+                     /label=KanR
+     rep_origin      800..1000
+                     /label=ori
+                     /note="high-copy-number origin of
+                     replication"
+     promoter        60..110
+                     /label=T7 promoter
+     misc_feature    join(1140..1200,1..40)
+                     /label=origin-spanning region
+ORIGIN
+        1 cgactgctaa gtattcccgt ttcagtatac tgacacgtga atccaccagg gaaaacctta
+       61 gtagcggccc ggtatagcca gcatagggta gtaagggagg aattcaacga tcgtgcggtg
+      121 tggaatccca gagagggtag gaggctaaag ctgttgaggg taggactgac agtgtgagcg
+      181 cgaaggtcgt gtcttcgtta ggctgacgca ctataccacg tcatacgcta tcatgaatct
+      241 tccttgctgt tgggctaagc ggggatcgct tacgaggtta aatcccgctc ttacagggaa
+      301 gagagagtct tccttactcg agacccatag tactatgatt tcgggcaaag aagacgggac
+      361 cactaatatt tgacggctcc aatctcatga tcgtccgggg gatccagccc tacatcgtcc
+      421 cagcccggct agtaacggta gattatcgat gtagcgtcaa ggccacccat cgcttgacgt
+      481 aacaggcctc gttcaaagcc gaatcaactt ggaagtctca caggttcatg ctgcaggctg
+      541 ggtgccgctt acacacgcta agacaaagac ttgcgccaaa acgctggtgc taaaagagct
+      601 tgtgatgcgt acgaggccgc gcaaatttca gttagacacg atgaccacga aataccgggg
+      661 aggtttagct tgtttgctta atcccgccaa gtaaatagcc cagtcggacg cggcttccgc
+      721 tagataaccg aactattcaa cctatccaaa tgtggcctaa agctttgatt ctcaagtttc
+      781 ctattagtca gtcatttggt gaaccaccgt ggaggcgcat attaagagta tactatcgag
+      841 gaattgctgg atggatacta tatttccaaa acagcactgt atttgacgcc gctatggccc
+      901 tcgtgggtga catgctgggt tagctagccg ggcaacaact cttagcgttg agtcgggctc
+      961 agagttgcac ccgttggctg ggttaaatat atcacacggc aagcgatgcg cggccgcata
+     1021 ggtgcggaac tccagattgg cgatgtgcaa ttactgtgcg acttgtcata tctacagggg
+     1081 actccagaat atcacgtact tcccaatacc caatatcttg caaccaagcg tttaatcacc
+     1141 tgttaaattg tgtagagtag taagcagatt actgcggaga gagagcgcga atctatacta
+//

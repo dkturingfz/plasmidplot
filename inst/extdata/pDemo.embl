@@ -1,0 +1,37 @@
+ID   pDemo; SV 1; circular; DNA; STD; SYN; 1200 BP.
+XX
+DE   Synthetic demo plasmid for plasmidplot tests.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1200
+FT                   /organism="synthetic construct"
+FT   CDS             120..380
+FT                   /label=GFP
+FT   CDS             complement(430..740)
+FT                   /label=KanR
+FT   rep_origin      800..1000
+FT                   /label=ori
+XX
+SQ   Sequence 1200 BP;
+     cgactgctaa gtattcccgt ttcagtatac tgacacgtga atccaccagg gaaaacctta     60
+     gtagcggccc ggtatagcca gcatagggta gtaagggagg aattcaacga tcgtgcggtg    120
+     tggaatccca gagagggtag gaggctaaag ctgttgaggg taggactgac agtgtgagcg    180
+     cgaaggtcgt gtcttcgtta ggctgacgca ctataccacg tcatacgcta tcatgaatct    240
+     tccttgctgt tgggctaagc ggggatcgct tacgaggtta aatcccgctc ttacagggaa    300
+     gagagagtct tccttactcg agacccatag tactatgatt tcgggcaaag aagacgggac    360
+     cactaatatt tgacggctcc aatctcatga tcgtccgggg gatccagccc tacatcgtcc    420
+     cagcccggct agtaacggta gattatcgat gtagcgtcaa ggccacccat cgcttgacgt    480
+     aacaggcctc gttcaaagcc gaatcaactt ggaagtctca caggttcatg ctgcaggctg    540
+     ggtgccgctt acacacgcta agacaaagac ttgcgccaaa acgctggtgc taaaagagct    600
+     tgtgatgcgt acgaggccgc gcaaatttca gttagacacg atgaccacga aataccgggg    660
+     aggtttagct tgtttgctta atcccgccaa gtaaatagcc cagtcggacg cggcttccgc    720
+     tagataaccg aactattcaa cctatccaaa tgtggcctaa agctttgatt ctcaagtttc    780
+     ctattagtca gtcatttggt gaaccaccgt ggaggcgcat attaagagta tactatcgag    840
+     gaattgctgg atggatacta tatttccaaa acagcactgt atttgacgcc gctatggccc    900
+     tcgtgggtga catgctgggt tagctagccg ggcaacaact cttagcgttg agtcgggctc    960
+     agagttgcac ccgttggctg ggttaaatat atcacacggc aagcgatgcg cggccgcata   1020
+     ggtgcggaac tccagattgg cgatgtgcaa ttactgtgcg acttgtcata tctacagggg   1080
+     actccagaat atcacgtact tcccaatacc caatatcttg caaccaagcg tttaatcacc   1140
+     tgttaaattg tgtagagtag taagcagatt actgcggaga gagagcgcga atctatacta   1200
+//

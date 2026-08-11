@@ -1,0 +1,35 @@
+LOCUS       pBR322                  4361 bp ds-DNA     circular SYN 01-JAN-2026
+DEFINITION  Cloning vector pBR322, complete sequence.
+ACCESSION   J01749
+VERSION     J01749.1
+KEYWORDS    .
+SOURCE      Cloning vector pBR322
+  ORGANISM  Cloning vector pBR322
+            other sequences; artificial sequences; vectors.
+FEATURES             Location/Qualifiers
+     source          1..4361
+                     /organism="Cloning vector pBR322"
+                     /mol_type="other DNA"
+     CDS             86..1276
+                     /gene="tet"
+                     /label=TcR
+                     /product="tetracycline efflux protein"
+                     /ApEinfo_fwdcolor="#ff9ccd"
+     CDS             complement(1915..2106)
+                     /gene="rop"
+                     /label=rop
+                     /product="Rop protein"
+     rep_origin      2535..3122
+                     /label=ori
+                     /note="high-copy-number ColE1/pMB1/pBR322/pUC origin of
+                     replication"
+     CDS             complement(3293..4153)
+                     /gene="bla"
+                     /label=AmpR
+                     /product="beta-lactamase"
+                     /ApEinfo_revcolor="#ffef86"
+     promoter        complement(4154..4258)
+                     /label=AmpR promoter
+     misc_feature    join(4300..4361,1..40)
+                     /label=origin-spanning region
+//

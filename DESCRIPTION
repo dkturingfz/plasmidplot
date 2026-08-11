@@ -1,0 +1,32 @@
+Package: plasmidplot
+Title: Publication-Quality Circular and Linear Plasmid Maps
+Version: 0.1.0
+Authors@R:
+    person(given = "dkturingfz", email = "dkturingfz@outlook.com",
+           role = c("aut", "cre"))
+Description: Draws circular and linear plasmid maps with 'grid' graphics.
+    Features are shown as colored arcs with optional arrowheads, callout
+    labels that are laid out to avoid overlap, an automatic base-pair scale,
+    and the plasmid name and size. A style is built from a handful of shape
+    parameters, with presets as named combinations of them, and the layout
+    follows the molecule's topology. Maps can be built up feature by
+    feature or imported from GenBank, EMBL, FASTA and SnapGene files, whose
+    format is detected from content rather than file extension. Restriction
+    sites can be located in the sequence and labeled. Ships eight visual
+    styles, including one inspired by the 'AngularPlasmid' JavaScript
+    library, and seven categorical palettes checked for colorblind safety.
+    Palettes from other packages can be used directly, as a color vector or
+    as a palette function, and checked against the same criteria.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    grDevices,
+    grid,
+    tools,
+    utils
+Suggests:
+    testthat (>= 3.0.0),
+    xml2
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.0

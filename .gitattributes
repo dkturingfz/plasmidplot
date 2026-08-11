@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.png binary
+*.gb text eol=lf
+*.embl text eol=lf
+*.fa text eol=lf
