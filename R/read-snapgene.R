@@ -69,11 +69,13 @@ seg_string <- function(seg) {
 #' @note Requires the `xml2` package, which is only needed for this reader.
 #' @seealso [read_genbank()], [read_plasmid()]
 #' @examples
-#' \dontrun{
-#' p <- read_snapgene("pUC19.dna")
+#' dna <- system.file("extdata", "pDemo.dna", package = "plasmidplot")
+#' p <- read_snapgene(dna)
+#' p
 #' plot(p, style = "snapgene")
-#' plot(read_snapgene("pUC19.dna", colors = "file"))
-#' }
+#'
+#' # Keep the colors the file itself stores, rather than the style's palette.
+#' plot(read_snapgene(dna, colors = "file"))
 #' @export
 read_snapgene <- function(file, name = NULL, types = NULL,
                           skip_types = character(),

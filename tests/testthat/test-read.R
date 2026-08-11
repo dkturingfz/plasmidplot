@@ -147,6 +147,34 @@ write_dna <- function(path, seq_len = 2000, circular = TRUE, xml = NULL) {
   path
 }
 
+test_that("read_snapgene reads the stored .dna fixture", {
+  skip_if_not_installed("xml2")
+  # A file on disk, not one the test just built, so the binary reader is
+  # exercised against bytes that were written once and left alone.
+  dna <- system.file("extdata", "pDemo.dna", package = "plasmidplot")
+  p <- read_snapgene(dna)
+  expect_equal(p$length, 1200)
+  expect_equal(p$topology, "circular")
+  expect_equal(nchar(p$sequence), 1200)
+
+  labs <- vapply(p$markers, function(m) m$label, character(1))
+  expect_setequal(labs, c("GFP", "KanR", "ori", "T7 promoter"))
+  expect_equal(p$markers[[which(labs == "GFP")]]$arrow, "end")
+  expect_equal(p$markers[[which(labs == "KanR")]]$arrow, "start")
+  expect_equal(p$markers[[which(labs == "T7 promoter")]]$arrow, "both")
+  expect_equal(p$markers[[which(labs == "ori")]]$arrow, "none")
+
+  # The same molecule as the GenBank fixture, so the two readers must agree.
+  gb <- read_genbank(system.file("extdata", "pDemo.gb", package = "plasmidplot"))
+  expect_equal(p$sequence, gb$sequence)
+  for (lab in c("GFP", "KanR", "ori")) {
+    dm <- p$markers[[which(labs == lab)]]
+    glabs <- vapply(gb$markers, function(m) m$label, character(1))
+    gm <- gb$markers[[which(glabs == lab)]]
+    expect_equal(c(dm$start, dm$end), c(gm$start, gm$end), info = lab)
+  }
+})
+
 test_that("read_snapgene parses segments, topology and features", {
   skip_if_not_installed("xml2")
   tf <- tempfile(fileext = ".dna")

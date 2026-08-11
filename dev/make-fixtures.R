@@ -107,6 +107,37 @@ writeLines(c(">pDemo synthetic demo plasmid",
                        pmin(seq(70, nchar(seq) + 69, 70), nchar(seq)))),
            "inst/extdata/pDemo.fa")
 
+# A real (if minimal) SnapGene file, so read_snapgene() has a runnable
+# example and the tests exercise the binary reader against a stored file
+# rather than only against one they build themselves.
+write_dna <- function(path, sequence, circular = TRUE, xml) {
+  con <- file(path, "wb")
+  on.exit(close(con), add = TRUE)
+  put <- function(type, payload) {
+    writeBin(as.raw(type), con)
+    writeBin(length(payload), con, size = 4L, endian = "big")
+    if (length(payload)) writeBin(payload, con)
+  }
+  put(9L, c(charToRaw("SnapGene"), as.raw(c(0, 1, 0, 15, 0, 15))))
+  put(0L, c(as.raw(if (circular) 1L else 0L), charToRaw(sequence)))
+  put(10L, charToRaw(xml))
+  path
+}
+
+feature_xml <- paste0(
+  '<Features nextValidID="4">',
+  '<Feature recentID="0" name="GFP" type="CDS" directionality="1">',
+  '<Segment range="120-380" color="#1baf7a" type="standard"/>',
+  '<Q name="gene"><V text="gfp"/></Q></Feature>',
+  '<Feature recentID="1" name="KanR" type="CDS" directionality="2">',
+  '<Segment range="430-740" color="#eb6834" type="standard"/></Feature>',
+  '<Feature recentID="2" name="ori" type="rep_origin">',
+  '<Segment range="800-1000" color="#2a78d6" type="standard"/></Feature>',
+  '<Feature recentID="3" name="T7 promoter" type="promoter" directionality="3">',
+  '<Segment range="60-110" color="#eda100" type="standard"/></Feature>',
+  '</Features>')
+write_dna("inst/extdata/pDemo.dna", seq, circular = TRUE, xml = feature_xml)
+
 cat("wrote pDemo.gb / .embl / .fa,", LEN, "bp\n")
 cat("cut positions:",
     paste(sprintf("%s=%d", names(implants),

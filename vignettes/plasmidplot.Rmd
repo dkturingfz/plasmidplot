@@ -1,0 +1,247 @@
+---
+title: "Drawing plasmid maps with plasmidplot"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Drawing plasmid maps with plasmidplot}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 6,
+  dpi = 110
+)
+library(plasmidplot)
+```
+
+`plasmidplot` draws circular and linear maps of plasmids and other DNA
+molecules using `grid`. It has no dependencies beyond base R.
+
+## A map from scratch
+
+A map is a `plasmid()` plus features added with `pp_marker()`. Positions are
+base pairs, and `arrow` shows which strand a feature is on: `"end"` points
+clockwise (forward strand), `"start"` counter-clockwise (reverse).
+
+```{r scratch}
+p <- plasmid("pBR322", 4361) |>
+  pp_marker(86, 1276,   label = "TcR",  arrow = "end") |>
+  pp_marker(1915, 2106, label = "rop",  arrow = "start") |>
+  pp_marker(2535, 3122, label = "ori") |>
+  pp_marker(3293, 4153, label = "AmpR", arrow = "start")
+
+plot(p)
+```
+
+Labels are placed by an algorithm that spreads them apart, so features close
+together on the backbone still get readable callouts.
+
+A feature whose `end` is before its `start` wraps the origin, which is
+something only a circular molecule can do:
+
+```{r wrap}
+plot(pp_marker(plasmid("pWrap", 3000), 2800, 300, label = "crosses origin",
+               arrow = "end"))
+```
+
+To add many features at once, `pp_features()` takes a data frame with `start`
+and `end` columns and any of `label`, `color`, `group`, `arrow`, `offset` and
+`width`:
+
+```{r features}
+feats <- data.frame(
+  start = c(86, 2535, 3293),
+  end   = c(1276, 3122, 4153),
+  label = c("TcR", "ori", "AmpR"),
+  arrow = c("end", "none", "start")
+)
+plot(pp_features(plasmid("pBR322", 4361), feats))
+```
+
+## Reading a file
+
+`read_plasmid()` detects the format from the file's *content* rather than its
+extension, so a `.dna` file is read as SnapGene or as plain sequence depending
+on what it actually contains, and a GenBank record saved as `.txt` still
+works.
+
+```{r read}
+gb <- system.file("extdata", "pDemo.gb", package = "plasmidplot")
+p <- read_plasmid(gb)
+p
+```
+
+GenBank, EMBL, FASTA, SnapGene and bare sequence are all recognized. Each
+also has a direct reader (`read_genbank()`, `read_embl()`, `read_fasta()`,
+`read_snapgene()`) when you want to be explicit.
+
+The readers handle `complement(...)` for strand, `join(...)` for features
+that cross the origin, and the `<`/`>` partial-boundary markers. Useful
+arguments:
+
+```{r read-args, eval = FALSE}
+read_genbank(gb,
+  types      = "CDS",        # keep only these feature types
+  skip_types = "source",     # drop these (source spans the whole molecule)
+  label_from = c("label", "gene", "product"),  # qualifier priority
+  color_by   = "feature",    # or "type": one color per feature type
+  colors     = "style",      # or "file": keep the colors stored in the file
+  sequence   = TRUE          # keep the sequence for pp_find_sites()
+)
+```
+
+The sequence is kept on the object as `p$sequence`. If it disagrees with the
+length the record declares — a truncated file — it is refused with a warning
+rather than used, because every position computed from it would be wrong.
+
+## Restriction sites
+
+With a sequence in hand, `pp_find_sites()` locates cut positions and adds
+them as labeled ticks:
+
+```{r sites, fig.height = 6.5}
+p <- pp_find_sites(p)
+plot(p)
+```
+
+By default only enzymes that cut **once** are shown. That is the classic
+plasmid-map convention: an enzyme cutting a dozen times adds no information
+and buries the map in labels. Relax it with `unique_only = FALSE` and
+`max_sites`.
+
+You can name enzymes, or give your own recognition sequences, IUPAC
+ambiguity codes included:
+
+```{r sites-args, eval = FALSE}
+pp_find_sites(p, c("EcoRI", "BamHI"))
+pp_find_sites(p, c(MyEnz = "GGWCC"))
+pp_find_sites(p, unique_only = FALSE, max_sites = 3)
+```
+
+`pp_enzymes()` lists the built-in table. On a circular molecule the search
+wraps the origin, so a site straddling position 1 is not missed.
+
+## Styles are shape parameters
+
+A style is seven **shape** parameters. The presets are named combinations of
+them and nothing more — anything a preset expresses can be written by hand.
+
+| parameter | meaning |
+|---|---|
+| `layout` | `"auto"` (follow the molecule), `"circular"`, `"linear"` |
+| `anchor` | features `"center"`ed on the backbone, `"outside"` it, or `"inside"` |
+| `backbone` | `"ring"` (a band), `"line"` (a stroke), `"none"` |
+| `radius` | how much room the map takes |
+| `track` | backbone thickness |
+| `arc` | feature thickness |
+| `gap` | clearance when `anchor` is not `"center"` |
+
+```{r style-scratch}
+plot(p, style = pp_style(anchor = "outside", backbone = "line",
+                         radius = 0.26, arc = 0.05))
+```
+
+Or start from a preset and change one thing:
+
+```{r style-preset}
+plot(p, style = pp_style("minimal", arc = 0.05))
+```
+
+`pp_style()` with no arguments lists the presets:
+
+```{r presets}
+pp_style()
+```
+
+Styles never paint a background — whatever the device or surrounding viewport
+has shows through, so a map dropped into a panel layout will not cover its
+neighbours with a white rectangle. The dark presets need a dark ground to be
+legible, and `pp_canvas()` returns the one they were designed against:
+
+```{r canvas}
+plot(p, style = "neon", bg = pp_canvas("neon"))
+```
+
+## Circular and linear
+
+`layout = "auto"` follows the molecule's topology, which the readers parse.
+Force it either way when you want to:
+
+```{r linear, fig.width = 8, fig.height = 4}
+plot(p, style = pp_style("angular", layout = "linear"))
+```
+
+The shape parameters mean the same thing in both layouts — `anchor =
+"outside"` is outward on a circle and above the line on a linear map — so a
+style stays recognizable when the layout changes. A feature that wraps the
+origin is drawn as the two pieces it would occupy, since a linear molecule
+cannot have one.
+
+## Palettes are a separate choice
+
+Colors are not part of the style's shape. Any style can take any palette:
+
+```{r palettes}
+pp_palette()
+plot(p, style = pp_style("angular", palette = "jewel"))
+```
+
+`palette` also accepts a plain vector of colors, or a **function** of `n`
+returning `n` colors — which is the shape `ggsci`, `RColorBrewer`, `scales`
+and `viridis` all expose, so those drop in with no adapter:
+
+```{r external, eval = FALSE}
+plot(p, style = pp_style("angular", palette = ggsci::pal_npg("nrc")))
+plot(p, style = pp_style("angular", palette = RColorBrewer::brewer.pal(8, "Dark2")))
+```
+
+A function is preferable to a fixed vector, because it is called with the
+number of colors the map actually needs: twelve features get twelve distinct
+colors instead of a cycled eight.
+
+### Checking a palette
+
+The built-in palettes were checked pair by pair under simulated protanopia,
+deuteranopia and tritanopia. `pp_check_palette()` holds any palette you bring
+to the same bar:
+
+```{r check}
+pp_check_palette("default")
+```
+
+Two of the five checks — CVD separation and the normal-vision floor — decide
+whether a reader can tell two features apart at all. The other three govern
+how the palette looks against the surface. The printed summary says which
+kind failed, because palettes from other packages often miss the cosmetic
+bands while remaining perfectly readable.
+
+## Panels
+
+`newpage = FALSE` draws into an existing viewport:
+
+```{r panels, fig.width = 8, fig.height = 4}
+grid::grid.newpage()
+grid::pushViewport(grid::viewport(layout = grid::grid.layout(1, 2)))
+grid::pushViewport(grid::viewport(layout.pos.col = 1))
+plot(p, style = pp_style("angular", show_title = FALSE), newpage = FALSE)
+grid::popViewport()
+grid::pushViewport(grid::viewport(layout.pos.col = 2))
+plot(p, style = pp_style("minimal", show_title = FALSE), newpage = FALSE)
+grid::popViewport(2)
+```
+
+## Non-ASCII labels
+
+Labels take any Unicode text, but the `png()` device bundled with Windows
+fails to render it outside a UTF-8 locale. Use `ragg` or a cairo device
+instead:
+
+```{r unicode, eval = FALSE}
+ragg::agg_png("plasmid.png", width = 1400, height = 1400, res = 220)
+plot(p)
+dev.off()
+```

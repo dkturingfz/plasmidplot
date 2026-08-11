@@ -3,3 +3,8 @@
 ^man/figures$
 ^dev$
 ^Rplots\.pdf$
+^doc$
+^Meta$
+^cran-comments\.md$
+^\.gitattributes$
+^\.github$
