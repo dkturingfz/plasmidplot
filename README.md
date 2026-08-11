@@ -1,6 +1,10 @@
 # plasmidplot
 
-用 R 绘制出版级环形质粒图谱。风格灵感来自 [AngularPlasmid](https://github.com/vixis/angularplasmid)，核心用 base R + grid 实现。
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/dkturingfz/plasmidplot/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dkturingfz/plasmidplot/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
+用 R 绘制出版级**环形与线性**质粒图谱。风格灵感来自 [AngularPlasmid](https://github.com/vixis/angularplasmid)，核心用 base R + grid 实现，**除基础包外零依赖**。
 
 **风格（style）和配色（palette）是两个独立维度**，可以任意组合。风格本身由**七个形状参数**构成，预设只是这些参数的常用组合——预设能做到的，你都能手写出来：
 
@@ -45,7 +49,8 @@ plot(p, style = pp_style("minimal", layout = "linear"))
 ## 安装
 
 ```r
-devtools::install("i:/plasmidplot")
+# install.packages("remotes")
+remotes::install_github("dkturingfz/plasmidplot")
 ```
 
 ## 快速开始
