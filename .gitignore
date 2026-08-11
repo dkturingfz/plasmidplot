@@ -8,3 +8,4 @@ Rplots.pdf
 .DS_Store
 /doc/
 /Meta/
+.playwright-mcp/
