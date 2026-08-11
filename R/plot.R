@@ -12,7 +12,7 @@
 #'   the available presets: `"angular"`, `"classic"`, `"dark"`, `"snapgene"`,
 #'   `"soft"`, `"neon"`, `"minimal"`, `"blueprint"`.
 #' @param bg Background to paint behind the map. `NULL` (the default) paints
-#'   nothing, so the device or surrounding viewport shows through — styles
+#'   nothing, so the device or surrounding viewport shows through -- styles
 #'   never impose a background of their own. Pass a color, or
 #'   `pp_canvas(style)` for the ground the style was designed against, which
 #'   the dark presets need to be legible.

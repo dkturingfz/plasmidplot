@@ -36,12 +36,12 @@ check with columns \code{check}, \code{status} (\code{"PASS"}, \code{"WARN"} or 
 \description{
 Runs the measurable checks a categorical palette has to pass, using the
 same transforms and thresholds the built-in palettes were validated with.
-Use it on any palette you bring from another package — \code{ggsci},
-\code{RColorBrewer}, \code{viridis}, \code{ggpubr} — before relying on it.
+Use it on any palette you bring from another package -- \code{ggsci},
+\code{RColorBrewer}, \code{viridis}, \code{ggpubr} -- before relying on it.
 }
 \details{
-Five checks are computed. Two of them — \strong{CVD separation} and the
-\strong{normal-vision floor} — decide whether a reader can tell two features
+Five checks are computed. Two of them -- \strong{CVD separation} and the
+\strong{normal-vision floor} -- decide whether a reader can tell two features
 apart at all; failing either means the palette is unsafe as it stands. The
 other three govern how the palette looks and how it sits on the surface,
 and failing them means the colors are legible but sit outside the band the
@@ -49,17 +49,17 @@ built-in palettes hold to. The printed summary says which kind failed,
 because most palettes from other packages miss the cosmetic bands while
 remaining perfectly readable.
 \itemize{
-\item \strong{Lightness band} — OKLCH L inside the band for the mode.
-\item \strong{Chroma floor} — OKLCH C at or above 0.10, below which a hue reads gray.
-\item \strong{CVD separation} — OKLab ΔE between slots under simulated protanopia
+\item \strong{Lightness band} -- OKLCH L inside the band for the mode.
+\item \strong{Chroma floor} -- OKLCH C at or above 0.10, below which a hue reads gray.
+\item \strong{CVD separation} -- OKLab dE between slots under simulated protanopia
 and deuteranopia (tritanopia reported alongside). At or above 8 passes;
-6 to 8 is a warning band that is sound only with a second channel — on a
+6 to 8 is a warning band that is sound only with a second channel -- on a
 plasmid map every feature carries a text label, which supplies it. Below
 6 fails.
-\item \strong{Normal-vision floor} — worst pair at or above ΔE 15 under ordinary
+\item \strong{Normal-vision floor} -- worst pair at or above dE 15 under ordinary
 vision. This one is a hard gate: below it, full-color readers cannot tell
 the two apart either, and a text label does not excuse it.
-\item \strong{Contrast vs surface} — WCAG ratio of at least 3:1. A warning here
+\item \strong{Contrast vs surface} -- WCAG ratio of at least 3:1. A warning here
 obliges visible labels, which the maps always draw.
 }
 }

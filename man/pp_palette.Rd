@@ -17,7 +17,7 @@ Named color sets that can be passed to \code{\link[=pp_style]{pp_style()}} as \c
 }
 \details{
 A palette is only the colors. The geometry, chrome and typography of a map
-are a \emph{style} — see \code{\link[=pp_style]{pp_style()}} — and the two are chosen independently:
+are a \emph{style} -- see \code{\link[=pp_style]{pp_style()}} -- and the two are chosen independently:
 any palette can be paired with any style. Names ending in \verb{_dark} are
 stepped for a dark ground and will be washed out on a light one.
 
@@ -30,7 +30,7 @@ every gate, contrast included.
 \item \code{"vivid"} and \code{"candy"} (light) clear every separation gate.
 \item \code{"muted"} (light) clears the separation floors, with its closest
 colorblind pair in the band that is sound only because each feature also
-carries a text label — identity here never rests on hue alone.
+carries a text label -- identity here never rests on hue alone.
 \item \code{"neon_dark"} clears contrast and both separation floors on a dark
 ground. It sits deliberately brighter than the others; that is the look.
 }

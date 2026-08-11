@@ -95,7 +95,7 @@ read_genbank(gb,
 ```
 
 The sequence is kept on the object as `p$sequence`. If it disagrees with the
-length the record declares — a truncated file — it is refused with a warning
+length the record declares -- a truncated file -- it is refused with a warning
 rather than used, because every position computed from it would be wrong.
 
 ## Restriction sites
@@ -128,7 +128,7 @@ wraps the origin, so a site straddling position 1 is not missed.
 ## Styles are shape parameters
 
 A style is seven **shape** parameters. The presets are named combinations of
-them and nothing more — anything a preset expresses can be written by hand.
+them and nothing more -- anything a preset expresses can be written by hand.
 
 | parameter | meaning |
 |---|---|
@@ -157,7 +157,7 @@ plot(p, style = pp_style("minimal", arc = 0.05))
 pp_style()
 ```
 
-Styles never paint a background — whatever the device or surrounding viewport
+Styles never paint a background -- whatever the device or surrounding viewport
 has shows through, so a map dropped into a panel layout will not cover its
 neighbours with a white rectangle. The dark presets need a dark ground to be
 legible, and `pp_canvas()` returns the one they were designed against:
@@ -175,8 +175,8 @@ Force it either way when you want to:
 plot(p, style = pp_style("angular", layout = "linear"))
 ```
 
-The shape parameters mean the same thing in both layouts — `anchor =
-"outside"` is outward on a circle and above the line on a linear map — so a
+The shape parameters mean the same thing in both layouts -- `anchor =
+"outside"` is outward on a circle and above the line on a linear map -- so a
 style stays recognizable when the layout changes. A feature that wraps the
 origin is drawn as the two pieces it would occupy, since a linear molecule
 cannot have one.
@@ -191,7 +191,7 @@ plot(p, style = pp_style("angular", palette = "jewel"))
 ```
 
 `palette` also accepts a plain vector of colors, or a **function** of `n`
-returning `n` colors — which is the shape `ggsci`, `RColorBrewer`, `scales`
+returning `n` colors -- which is the shape `ggsci`, `RColorBrewer`, `scales`
 and `viridis` all expose, so those drop in with no adapter:
 
 ```{r external, eval = FALSE}
@@ -213,7 +213,7 @@ to the same bar:
 pp_check_palette("default")
 ```
 
-Two of the five checks — CVD separation and the normal-vision floor — decide
+Two of the five checks -- CVD separation and the normal-vision floor -- decide
 whether a reader can tell two features apart at all. The other three govern
 how the palette looks against the surface. The printed summary says which
 kind failed, because palettes from other packages often miss the cosmetic

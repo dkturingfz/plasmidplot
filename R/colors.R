@@ -10,7 +10,7 @@ pp_shade <- function(col, amount) {
 #' Named color sets that can be passed to [pp_style()] as `palette = "<name>"`.
 #'
 #' A palette is only the colors. The geometry, chrome and typography of a map
-#' are a *style* — see [pp_style()] — and the two are chosen independently:
+#' are a *style* -- see [pp_style()] -- and the two are chosen independently:
 #' any palette can be paired with any style. Names ending in `_dark` are
 #' stepped for a dark ground and will be washed out on a light one.
 #'
@@ -24,7 +24,7 @@ pp_shade <- function(col, amount) {
 #' * `"vivid"` and `"candy"` (light) clear every separation gate.
 #' * `"muted"` (light) clears the separation floors, with its closest
 #'   colorblind pair in the band that is sound only because each feature also
-#'   carries a text label — identity here never rests on hue alone.
+#'   carries a text label -- identity here never rests on hue alone.
 #' * `"neon_dark"` clears contrast and both separation floors on a dark
 #'   ground. It sits deliberately brighter than the others; that is the look.
 #'

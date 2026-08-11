@@ -202,16 +202,16 @@ pp_presets <- list(
 #'
 #' Their default palettes are `default`, except `soft` (`muted`), `dark` and
 #' `blueprint` (`default_dark`) and `neon` (`neon_dark`). A palette is an
-#' independent choice — see [pp_palette()].
+#' independent choice -- see [pp_palette()].
 #'
 #' @param preset Base preset to start from; see the table above. Call
 #'   `pp_style()` with no arguments for the names.
 #' @param ... Named overrides. The shape parameters are `layout`, `anchor`,
 #'   `backbone`, `radius`, `track`, `arc` and `gap`. The rest are:
-#'   `bg` (`NA` in every preset — styles do not paint a background; see
+#'   `bg` (`NA` in every preset -- styles do not paint a background; see
 #'   [pp_canvas()]), `canvas`, `track_fill`, `track_col`, `backbone_col`,
 #'   `backbone_lwd`, `palette` (a [pp_palette()] name, a vector of colors, or
-#'   a function of `n` returning `n` colors — the shape `ggsci`,
+#'   a function of `n` returning `n` colors -- the shape `ggsci`,
 #'   `RColorBrewer`, `scales` and `viridis` all expose, so those drop straight
 #'   in; check any of them with [pp_check_palette()]), `arc_border` (`NA`,
 #'   `"auto"` for a darker step of the fill, or a color), `arc_lwd`,

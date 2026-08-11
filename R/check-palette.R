@@ -1,6 +1,6 @@
 # Thresholds and transforms below mirror the reference validator the built-in
 # palettes were checked with, so a palette you bring is held to the same bar.
-# ΔE is Euclidean distance in OKLab, x100.
+# dE is Euclidean distance in OKLab, x100.
 pp_thresholds <- list(
   band = list(light = c(0.43, 0.77), dark = c(0.48, 0.67)),  # OKLCH L
   chroma_floor = 0.10,
@@ -74,12 +74,12 @@ pair_delta_e <- function(colors, idx, kind = NULL) {
 #'
 #' Runs the measurable checks a categorical palette has to pass, using the
 #' same transforms and thresholds the built-in palettes were validated with.
-#' Use it on any palette you bring from another package — `ggsci`,
-#' `RColorBrewer`, `viridis`, `ggpubr` — before relying on it.
+#' Use it on any palette you bring from another package -- `ggsci`,
+#' `RColorBrewer`, `viridis`, `ggpubr` -- before relying on it.
 #'
 #' @details
-#' Five checks are computed. Two of them — **CVD separation** and the
-#' **normal-vision floor** — decide whether a reader can tell two features
+#' Five checks are computed. Two of them -- **CVD separation** and the
+#' **normal-vision floor** -- decide whether a reader can tell two features
 #' apart at all; failing either means the palette is unsafe as it stands. The
 #' other three govern how the palette looks and how it sits on the surface,
 #' and failing them means the colors are legible but sit outside the band the
@@ -87,17 +87,17 @@ pair_delta_e <- function(colors, idx, kind = NULL) {
 #' because most palettes from other packages miss the cosmetic bands while
 #' remaining perfectly readable.
 #'
-#' * **Lightness band** — OKLCH L inside the band for the mode.
-#' * **Chroma floor** — OKLCH C at or above 0.10, below which a hue reads gray.
-#' * **CVD separation** — OKLab ΔE between slots under simulated protanopia
+#' * **Lightness band** -- OKLCH L inside the band for the mode.
+#' * **Chroma floor** -- OKLCH C at or above 0.10, below which a hue reads gray.
+#' * **CVD separation** -- OKLab dE between slots under simulated protanopia
 #'   and deuteranopia (tritanopia reported alongside). At or above 8 passes;
-#'   6 to 8 is a warning band that is sound only with a second channel — on a
+#'   6 to 8 is a warning band that is sound only with a second channel -- on a
 #'   plasmid map every feature carries a text label, which supplies it. Below
 #'   6 fails.
-#' * **Normal-vision floor** — worst pair at or above ΔE 15 under ordinary
+#' * **Normal-vision floor** -- worst pair at or above dE 15 under ordinary
 #'   vision. This one is a hard gate: below it, full-color readers cannot tell
 #'   the two apart either, and a text label does not excuse it.
-#' * **Contrast vs surface** — WCAG ratio of at least 3:1. A warning here
+#' * **Contrast vs surface** -- WCAG ratio of at least 3:1. A warning here
 #'   obliges visible labels, which the maps always draw.
 #'
 #' @param colors A vector of colors, a [pp_palette()] name, or a palette

@@ -14,7 +14,7 @@ the available presets: \code{"angular"}, \code{"classic"}, \code{"dark"}, \code{
 \code{"soft"}, \code{"neon"}, \code{"minimal"}, \code{"blueprint"}.}
 
 \item{bg}{Background to paint behind the map. \code{NULL} (the default) paints
-nothing, so the device or surrounding viewport shows through — styles
+nothing, so the device or surrounding viewport shows through -- styles
 never impose a background of their own. Pass a color, or
 \code{pp_canvas(style)} for the ground the style was designed against, which
 the dark presets need to be legible.}

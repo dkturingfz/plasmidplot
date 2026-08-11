@@ -12,10 +12,10 @@ pp_style(preset, ...)
 
 \item{...}{Named overrides. The shape parameters are \code{layout}, \code{anchor},
 \code{backbone}, \code{radius}, \code{track}, \code{arc} and \code{gap}. The rest are:
-\code{bg} (\code{NA} in every preset — styles do not paint a background; see
+\code{bg} (\code{NA} in every preset -- styles do not paint a background; see
 \code{\link[=pp_canvas]{pp_canvas()}}), \code{canvas}, \code{track_fill}, \code{track_col}, \code{backbone_col},
 \code{backbone_lwd}, \code{palette} (a \code{\link[=pp_palette]{pp_palette()}} name, a vector of colors, or
-a function of \code{n} returning \code{n} colors — the shape \code{ggsci},
+a function of \code{n} returning \code{n} colors -- the shape \code{ggsci},
 \code{RColorBrewer}, \code{scales} and \code{viridis} all expose, so those drop straight
 in; check any of them with \code{\link[=pp_check_palette]{pp_check_palette()}}), \code{arc_border} (\code{NA},
 \code{"auto"} for a darker step of the fill, or a color), \code{arc_lwd},
@@ -77,7 +77,7 @@ restepped for a dark ground, which is why their shapes match.\tabular{lllllll}{
 
 Their default palettes are \code{default}, except \code{soft} (\code{muted}), \code{dark} and
 \code{blueprint} (\code{default_dark}) and \code{neon} (\code{neon_dark}). A palette is an
-independent choice — see \code{\link[=pp_palette]{pp_palette()}}.
+independent choice -- see \code{\link[=pp_palette]{pp_palette()}}.
 }
 
 \examples{
