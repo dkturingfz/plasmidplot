@@ -44,6 +44,11 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
+      # The PDF manual goes through LaTeX, which is where a stray non-ASCII
+      # character in an Rd file turns into a hard ERROR. Skipping the manual
+      # hides that class of failure until CRAN finds it.
+      - uses: r-lib/actions/setup-tinytex@v2
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
@@ -51,7 +56,6 @@ jobs:
 
       - uses: r-lib/actions/check-r-package@v2
         with:
-          # CRAN's own bar, so a NOTE here is a NOTE there.
-          args: 'c("--no-manual", "--as-cran")'
+          # CRAN's own bar, manual included, so a NOTE here is a NOTE there.
+          args: 'c("--as-cran")'
           upload-snapshots: true
-          build_args: 'c("--no-manual")'
