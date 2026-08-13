@@ -44,10 +44,30 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
-      # The PDF manual goes through LaTeX, which is where a stray non-ASCII
-      # character in an Rd file turns into a hard ERROR. Skipping the manual
-      # hides that class of failure until CRAN finds it.
-      - uses: r-lib/actions/setup-tinytex@v2
+      # A non-ASCII character in an Rd file is an ERROR on CRAN, because the
+      # PDF manual goes through LaTeX. Catching it needs a two-second scan,
+      # not a LaTeX toolchain on six runners -- installing TinyTeX here only
+      # produced its own font failures while the real manual built fine.
+      - name: Sources must be ASCII
+        shell: Rscript {0}
+        run: |
+          offenders <- character()
+          for (d in c("R", "man", "vignettes")) {
+            fs <- list.files(d, pattern = "[.](R|Rd|Rmd)$", full.names = TRUE)
+            for (f in fs) {
+              ln <- readLines(f, warn = FALSE)
+              hit <- grepl("[^\x01-\x7f]", ln, useBytes = TRUE)
+              if (any(hit)) {
+                offenders <- c(offenders, sprintf("%s:%d", f, which(hit)))
+              }
+            }
+          }
+          if (length(offenders)) {
+            stop("Non-ASCII characters (LaTeX will reject these when CRAN ",
+                 "builds the PDF manual):\n  ",
+                 paste(offenders, collapse = "\n  "), call. = FALSE)
+          }
+          cat("R/, man/ and vignettes/ are ASCII only\n")
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -56,6 +76,8 @@ jobs:
 
       - uses: r-lib/actions/check-r-package@v2
         with:
-          # CRAN's own bar, manual included, so a NOTE here is a NOTE there.
-          args: 'c("--as-cran")'
+          # CRAN's own bar. The PDF manual is left to win-builder and to
+          # CRAN's own incoming checks, which have a complete LaTeX.
+          args: 'c("--no-manual", "--as-cran")'
           upload-snapshots: true
+          build_args: 'c("--no-manual")'
