@@ -7,7 +7,7 @@ This is a new release.
 ## Test environments
 
 - Windows 11, R 4.6.0 (local): `R CMD check --as-cran`, manual included
-- win-builder, R-devel and R-release
+- win-builder, R 4.6.1: Status 1 NOTE (the one below)
 - GitHub Actions: macOS release, Windows release, Windows devel,
   Ubuntu devel / release / oldrel-1, all with `--as-cran`
 
@@ -19,9 +19,9 @@ The note is the spell check on DESCRIPTION:
 
 ```
 Possibly misspelled words in DESCRIPTION:
-  Plasmid (2:41, 7:52)
-  callout (9:5)
-  plasmid (10:20)
+  Plasmid (2:48)
+  callout (8:66)
+  plasmid (7:40, 10:13)
 ```
 
 All three are correct. "Plasmid" is the standard term for the circular DNA
