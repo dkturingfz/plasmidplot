@@ -10,3 +10,4 @@
 ^\.github$
 ^\.playwright-mcp$
 ^\.wb$
+^_submit$
