@@ -57,13 +57,15 @@ unless \code{name} is given.
 Requires the \code{xml2} package, which is only needed for this reader.
 }
 \examples{
-dna <- system.file("extdata", "pDemo.dna", package = "plasmidplot")
-p <- read_snapgene(dna)
-p
-plot(p, style = "snapgene")
+if (requireNamespace("xml2", quietly = TRUE)) {
+  dna <- system.file("extdata", "pDemo.dna", package = "plasmidplot")
+  p <- read_snapgene(dna)
+  print(p)
+  plot(p, style = "snapgene")
 
-# Keep the colors the file itself stores, rather than the style's palette.
-plot(read_snapgene(dna, colors = "file"))
+  # Keep the colors the file itself stores, rather than the style's palette.
+  plot(read_snapgene(dna, colors = "file"))
+}
 }
 \seealso{
 \code{\link[=read_genbank]{read_genbank()}}, \code{\link[=read_plasmid]{read_plasmid()}}

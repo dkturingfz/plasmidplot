@@ -92,7 +92,9 @@ plot(p, style = pp_style(anchor = "outside", backbone = "line",
 plot(p, style = pp_style("angular", arc = 0.09))
 plot(p, style = pp_style("minimal", layout = "linear"))
 
-# Any palette vector or palette function works, e.g.
-# pp_style("angular", palette = ggsci::pal_npg("nrc"))
+# A palette can be a vector of colors, or a function of n returning n
+# colors -- the form ggsci, RColorBrewer and viridis palettes take.
 plot(p, style = pp_style("angular", palette = grDevices::hcl.colors(8, "Set2")))
+plot(p, style = pp_style("angular",
+                         palette = function(n) grDevices::hcl.colors(n, "Dark 3")))
 }

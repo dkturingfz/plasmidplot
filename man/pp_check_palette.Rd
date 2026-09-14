@@ -70,8 +70,7 @@ pp_check_palette("default_dark", mode = "dark")
 # A palette brought from elsewhere:
 pp_check_palette(c("#E64B35", "#4DBBD5", "#00A087", "#3C5488"))
 
-\dontrun{
-pp_check_palette(ggsci::pal_npg("nrc"), n = 8)
-pp_check_palette(RColorBrewer::brewer.pal(8, "Dark2"))
-}
+# A palette function is called with n.
+pp_check_palette(function(n) grDevices::hcl.colors(n, "Dark 3"), n = 6)
+pp_check_palette(grDevices::palette.colors(8, "Okabe-Ito"))
 }
