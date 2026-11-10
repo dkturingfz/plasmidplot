@@ -1,4 +1,4 @@
-# A style is six shape parameters plus secondary ink and type settings. The
+# A style is seven shape parameters plus secondary ink and type settings. The
 # shape parameters are the design; the presets below are nothing more than
 # named combinations of them, so anything a preset can express you can write
 # out by hand.
@@ -11,7 +11,7 @@ pp_style_base <- function() {
     layout = "auto",      # "auto" follows the plasmid, else circular/linear
     anchor = "center",    # features sit on the backbone, "outside", "inside"
     backbone = "ring",    # "ring" (a band), "line" (a stroke), "none"
-    radius = 0.30,        # circular only: backbone radius, npc
+    radius = 0.30,        # backbone radius; sets a linear map's half-width
     track = 0.045,        # backbone thickness
     arc = 0.058,          # feature thickness
     gap = 0.012,          # clearance when anchor is outside or inside
@@ -177,8 +177,9 @@ pp_presets <- list(
 #'     a linear map), or `"inside"`.}
 #'   \item{`backbone`}{`"ring"` draws the backbone as a filled band, `"line"`
 #'     as a single stroke, `"none"` omits it.}
-#'   \item{`radius`}{Circular only: the backbone's radius, in npc units of a
-#'     square viewport, so the usable maximum is 0.5.}
+#'   \item{`radius`}{The backbone's radius on a circular map, in npc units of
+#'     a square viewport, so the usable maximum is 0.5. A linear map scales
+#'     its width from the same number, so one value sizes both layouts.}
 #'   \item{`track`}{Backbone thickness, used when `backbone = "ring"`.}
 #'   \item{`arc`}{Feature thickness.}
 #'   \item{`gap`}{Clearance between backbone and features when `anchor` is
@@ -252,6 +253,10 @@ pp_style <- function(preset, ...) {
   s <- utils::modifyList(pp_style_base(), pp_presets[[preset]])
   dots <- list(...)
   if (length(dots)) {
+    if (is.null(names(dots)) || !all(nzchar(names(dots)))) {
+      stop("Style overrides must be named, e.g. pp_style(\"angular\", ",
+           "arc = 0.09).", call. = FALSE)
+    }
     unknown <- setdiff(names(dots), names(s))
     if (length(unknown)) {
       stop("Unknown style field(s): ", paste(unknown, collapse = ", "),
@@ -264,6 +269,13 @@ pp_style <- function(preset, ...) {
       (!is.na(s$tick_every) && (!is.numeric(s$tick_every) || s$tick_every <= 0))) {
     stop("`tick_every` must be a single positive number, or NA for automatic.",
          call. = FALSE)
+  }
+  for (f in c("radius", "track", "arc", "gap")) {
+    v <- s[[f]]
+    if (!is.numeric(v) || length(v) != 1L || is.na(v) || v < 0) {
+      stop(sprintf("`%s` must be a single non-negative number.", f),
+           call. = FALSE)
+    }
   }
   s$layout <- match.arg(s$layout, c("auto", "circular", "linear"))
   s$anchor <- match.arg(s$anchor, c("center", "outside", "inside"))
@@ -293,8 +305,9 @@ print.pp_style <- function(x, ...) {
       paste(sprintf("%s=%s", pp_shape_fields,
                     vapply(x[pp_shape_fields], format, character(1))),
             collapse = "  "), "\n", sep = "")
-  cat(sprintf("  palette: %d colors\n",
-              if (is.function(x$palette)) NA_integer_ else length(x$palette)))
+  cat("  palette: ",
+      if (is.function(x$palette)) "a function of n"
+      else sprintf("%d colors", length(x$palette)), "\n", sep = "")
   invisible(x)
 }
 

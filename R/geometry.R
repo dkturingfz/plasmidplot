@@ -128,7 +128,9 @@ linear_pieces <- function(m, len) {
 nice_interval <- function(len, target = 8) {
   raw <- len / target
   base <- 10^floor(log10(raw))
-  cand <- c(1, 2, 2.5, 5, 10) * base
+  # Positions are whole base pairs: on a molecule of a few dozen bp a 2.5 bp
+  # step would put marks between bases and label them with fractions.
+  cand <- unique(pmax(1, round(c(1, 2, 2.5, 5, 10) * base)))
   cand[which.min(abs(len / cand - target))]
 }
 

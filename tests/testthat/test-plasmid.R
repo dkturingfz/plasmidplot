@@ -282,3 +282,50 @@ test_that("plotting runs without error in every style", {
   for (nm in pp_style()) expect_no_error(plot(p, style = nm))
   expect_no_error(plot(p, style = pp_style("minimal", backbone = "none")))
 })
+
+test_that("pp_marker and pp_site reject arguments that would break plot()", {
+  p <- plasmid("pX", 1000)
+  expect_error(pp_marker(p, 1, 50, label = c("a", "b")), "`label`")
+  expect_error(pp_marker(p, 1, 50, color = "notacolor"), "not a color")
+  expect_error(pp_marker(p, 1, 50, color = c("red", "blue")), "`color`")
+  expect_error(pp_marker(p, 1, 50, offset = "a"), "`offset`")
+  expect_error(pp_marker(p, 1, 50, width = -0.1), "`width`")
+  expect_error(pp_site(p, 5, "x", color = "notacolor"), "not a color")
+  expect_error(pp_site(p, 5, c("x", "y")), "`label`")
+  # What was accepted before still is.
+  expect_no_error(pp_marker(p, 1, 50, label = NA, color = NA, width = 0.03))
+  expect_no_error(pp_marker(p, 1, 50, color = "#ff000080", group = 1))
+  expect_no_error(pp_site(p, 5, color = "steelblue"))
+})
+
+test_that("pp_style rejects unnamed overrides and bad shape numbers", {
+  # An unnamed override used to be dropped without a word.
+  expect_error(pp_style("angular", 0.3), "must be named")
+  expect_error(pp_style(radius = "big"), "`radius`")
+  expect_error(pp_style(arc = -1), "`arc`")
+  expect_error(pp_style(gap = c(0.1, 0.2)), "`gap`")
+  expect_output(print(pp_style(palette = function(n) grDevices::rainbow(n))),
+                "palette: a function of n")
+  expect_output(print(pp_style("angular")), "palette: 8 colors")
+})
+
+test_that("plot() reports a bad bg instead of failing inside grid", {
+  pdf(NULL)
+  on.exit(dev.off(), add = TRUE)
+  expect_error(plot(pp_demo_plasmid(), bg = c("red", "blue")), "`bg`")
+  expect_error(plot(pp_demo_plasmid(), bg = "notacolor"), "`bg`")
+  expect_no_error(plot(pp_demo_plasmid(), bg = NA))
+  expect_no_error(plot(pp_demo_plasmid(), bg = "grey20"))
+})
+
+test_that("the scale of a very short molecule stays on whole base pairs", {
+  for (len in c(1, 5, 12, 20, 37, 79)) {
+    iv <- plasmidplot:::nice_interval(len)
+    expect_gte(iv, 1)
+    expect_equal(iv, round(iv))
+    for (layout in c("circular", "linear")) {
+      tk <- plasmidplot:::tick_positions(len, iv, layout)
+      expect_equal(tk, round(tk))
+    }
+  }
+})

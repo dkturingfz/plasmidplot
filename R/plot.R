@@ -31,6 +31,10 @@
 #' @export
 plot.plasmid <- function(x, style = "angular", bg = NULL, newpage = TRUE, ...) {
   s <- resolve_style(style)
+  if (!is.null(bg) && (length(bg) != 1L || (!is.na(bg) && !is_color(bg)))) {
+    stop("`bg` must be a single color, or NULL to paint nothing.",
+         call. = FALSE)
+  }
   if (newpage) grid::grid.newpage()
   ground <- if (is.null(bg)) s$bg else bg
   if (!is.null(ground) && !is.na(ground)) {

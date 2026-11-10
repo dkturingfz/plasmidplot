@@ -50,8 +50,9 @@ on it, \code{"outside"} clear of it (outward on a circle, above the line on
 a linear map), or \code{"inside"}.}
 \item{\code{backbone}}{\code{"ring"} draws the backbone as a filled band, \code{"line"}
 as a single stroke, \code{"none"} omits it.}
-\item{\code{radius}}{Circular only: the backbone's radius, in npc units of a
-square viewport, so the usable maximum is 0.5.}
+\item{\code{radius}}{The backbone's radius on a circular map, in npc units of
+a square viewport, so the usable maximum is 0.5. A linear map scales
+its width from the same number, so one value sizes both layouts.}
 \item{\code{track}}{Backbone thickness, used when \code{backbone = "ring"}.}
 \item{\code{arc}}{Feature thickness.}
 \item{\code{gap}}{Clearance between backbone and features when \code{anchor} is

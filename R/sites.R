@@ -26,6 +26,8 @@ pp_site <- function(p, position, label = NULL, color = NULL) {
     stop(sprintf("Position must lie in [1, %d].", round(p$length)),
          call. = FALSE)
   }
+  check_scalar(label, "label")
+  check_color(color)
   p$sites[[length(p$sites) + 1L]] <- list(
     position = as.numeric(position),
     label = if (is.null(label)) NA_character_ else as.character(label),

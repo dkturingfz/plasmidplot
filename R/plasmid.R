@@ -64,6 +64,17 @@ pp_marker <- function(p, start, end, label = NULL, color = NULL, group = NULL,
   if (start < 1 || start > p$length || end < 1 || end > p$length) {
     stop(sprintf("Positions must lie in [1, %d].", round(p$length)), call. = FALSE)
   }
+  check_scalar(label, "label")
+  check_scalar(group, "group")
+  check_color(color)
+  if (!is.numeric(offset) || length(offset) != 1L || is.na(offset)) {
+    stop("`offset` must be a single number.", call. = FALSE)
+  }
+  if (!is.null(width) &&
+      (!is.numeric(width) || length(width) != 1L || is.na(width) || width <= 0)) {
+    stop("`width` must be a single positive number, or NULL for the style's.",
+         call. = FALSE)
+  }
   p$markers[[length(p$markers) + 1L]] <- list(
     start = start, end = end,
     label = if (is.null(label)) NA_character_ else as.character(label),
@@ -72,6 +83,22 @@ pp_marker <- function(p, start, end, label = NULL, color = NULL, group = NULL,
     arrow = arrow, offset = offset, width = width
   )
   p
+}
+
+# Arguments are checked where they are given. Left until plot(), a bad label
+# or color surfaces as a grid error that names neither the argument nor the
+# feature it came from.
+check_scalar <- function(x, what) {
+  if (!is.null(x) && length(x) != 1L) {
+    stop(sprintf("`%s` must be a single value, or NULL.", what), call. = FALSE)
+  }
+}
+
+check_color <- function(x) {
+  check_scalar(x, "color")
+  if (!is.null(x) && !is.na(x) && !is_color(x)) {
+    stop("`color` is not a color R knows: ", x, call. = FALSE)
+  }
 }
 
 # A plasmid may carry no sequence at all, either because the file had none or

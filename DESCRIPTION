@@ -26,6 +26,7 @@ Roxygen: list(markdown = TRUE)
 Imports:
     grDevices,
     grid,
+    stats,
     tools,
     utils
 Suggests:
