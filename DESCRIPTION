@@ -1,6 +1,6 @@
 Package: plasmidplot
 Title: Publication-Quality Circular and Linear Plasmid Maps
-Version: 0.1.0
+Version: 0.1.1
 Authors@R:
     person(given = "Qiyou", family = "Pan", email = "dkturingfz@outlook.com",
            role = c("aut", "cre"))
