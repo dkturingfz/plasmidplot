@@ -35,6 +35,13 @@ labels with leader lines, restriction sites, and the plasmid name and size.
 \details{
 The layout follows the plasmid's \code{topology} unless the style says
 otherwise; see the \code{layout} shape parameter in \code{\link[=pp_style]{pp_style()}}.
+
+Labels are placed so that they do not overlap. On a circular map they are
+spread up and down each side of the ring. On a linear map they sit level
+in up to three rows while that stays tidy, and are otherwise slanted and
+fanned out sideways, which is what keeps a dozen restriction sites a few
+bases apart readable. A feature too short to see at the map's scale, such
+as a single-base variant, is drawn at a small minimum width.
 }
 \examples{
 p <- plasmid("pBR322", 4361) |>

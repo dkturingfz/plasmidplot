@@ -195,3 +195,127 @@ test_that("a linear plasmid read from file plots linear by default", {
   }, add = TRUE)
   expect_no_error(plot(pp_marker(p, 100, 500, label = "gene", arrow = "end")))
 })
+
+mcs_plasmid <- function(center, len = 2686) {
+  p <- plasmid("pUC-like", len) |>
+    pp_marker(146, 469, label = "lacZ-alpha", arrow = "end") |>
+    pp_marker(1629, 2486, label = "AmpR", arrow = "start")
+  for (i in 1:14) {
+    pos <- center + (i - 7) * 5
+    p <- pp_site(p, pos, sprintf("Enz%d (%d)", i, pos))
+  }
+  p
+}
+
+with_png <- function(code, width = 1200, height = 500) {
+  tf <- tempfile(fileext = ".png")
+  png(tf, width = width, height = height, res = 110)
+  on.exit({
+    dev.off()
+    unlink(tf)
+  }, add = TRUE)
+  force(code)
+}
+
+test_that("a sparse linear map keeps level labels in rows", {
+  with_png({
+    s <- pp_style("angular", layout = "linear")
+    p <- plasmid("sparse", 5000) |>
+      pp_marker(200, 900, label = "a") |>
+      pp_marker(2000, 2900, label = "b") |>
+      pp_marker(4000, 4700, label = "c")
+    lay <- plasmidplot:::lin_label_layout(plasmidplot:::lin_label_entries(p, s), s)
+    expect_true(all(lay$rot == 0))
+    expect_true(all(lay$hjust == 0.5))
+    expect_equal(length(unique(lay$y)), 1L)
+  })
+})
+
+test_that("a crowded linear map slants its labels and keeps them apart", {
+  # Fourteen sites five bases apart used to stack into a fourteen-row tower
+  # with every leader running through the labels below, up over the title.
+  for (center in c(40, 1343, 2640)) {
+    with_png({
+      s <- pp_style("angular", layout = "linear")
+      p <- mcs_plasmid(center)
+      entries <- plasmidplot:::lin_label_entries(p, s)
+      lay <- plasmidplot:::lin_label_layout(entries, s)
+      xs <- vapply(entries, function(e) e$x, numeric(1))
+      widths <- vapply(entries, function(e) {
+        plasmidplot:::text_width_npc(e$text, e$fontsize)
+      }, numeric(1))
+      rad <- lay$rot[1] * pi / 180
+
+      expect_true(all(lay$rot > 0 & lay$rot <= 45), info = center)
+      expect_equal(length(unique(lay$y)), 1L)
+      # Labels keep the order of what they point at, so leaders cannot cross,
+      # and sit a clear step apart.
+      expect_equal(order(lay$x), order(xs), info = center)
+      expect_gt(min(diff(sort(lay$x))), 0.01)
+      # Every label starts and ends on the page, below the title.
+      expect_true(all(lay$x > 0), info = center)
+      expect_true(all(lay$x + widths * cos(rad) < 1), info = center)
+      rise <- grid::convertHeight(grid::unit(
+        grid::convertWidth(grid::unit(max(widths), "npc"), "inches",
+                           valueOnly = TRUE) * sin(rad), "inches"),
+        "npc", valueOnly = TRUE)
+      expect_lte(lay$y[1] + rise, plasmidplot:::lin_label_ceiling(s) + 1e-9)
+      # Leaders stop below the line the labels start on.
+      anchors <- vapply(entries, function(e) e$anchor, numeric(1))
+      expect_true(all(lay$leader_y < lay$y))
+      expect_true(all(lay$leader_y > anchors))
+      expect_no_error(plot(p, style = s))
+    })
+  }
+})
+
+test_that("a leader through a label below it is detected", {
+  hit <- plasmidplot:::lin_leader_hits_label
+  # Label 2 sits in row 2 straight above label 1: its leader goes through it.
+  expect_true(hit(xs = c(0.5, 0.5), anchors = c(0.4, 0.4), lx = c(0.5, 0.5),
+                  leader_y = c(0.48, 0.58), y = c(0.5, 0.6),
+                  widths = c(0.1, 0.1), row_of = c(1L, 2L)))
+  # Far enough along, it passes beside the label instead.
+  expect_false(hit(xs = c(0.5, 0.6), anchors = c(0.4, 0.4), lx = c(0.5, 0.6),
+                   leader_y = c(0.48, 0.58), y = c(0.5, 0.6),
+                   widths = c(0.1, 0.1), row_of = c(1L, 2L)))
+  # One row has nothing beneath it to hit.
+  expect_false(hit(xs = c(0.2, 0.8), anchors = c(0.4, 0.4), lx = c(0.2, 0.8),
+                   leader_y = c(0.48, 0.48), y = c(0.5, 0.5),
+                   widths = c(0.1, 0.1), row_of = c(1L, 1L)))
+})
+
+test_that("a single-base feature is drawn wide enough to see", {
+  s <- pp_style("angular")
+  m <- list(start = 500, end = 500)
+  sp <- plasmidplot:::drawn_span(m, 5000, 0.3)
+  expect_gt(sp[2] - sp[1], 0)
+  expect_equal(mean(sp), 500)
+  # ... as an arc of the minimum extent, whatever the plasmid's length.
+  arc <- function(len) {
+    sp <- plasmidplot:::drawn_span(m, len, 0.3)
+    (sp[2] - sp[1]) / len * 2 * pi * 0.3
+  }
+  expect_equal(arc(5000), plasmidplot:::pp_min_extent)
+  expect_equal(arc(150000), plasmidplot:::pp_min_extent)
+  # A feature with an extent of its own is left exactly as given.
+  expect_equal(plasmidplot:::drawn_span(list(start = 100, end = 900), 5000, 0.3),
+               c(100, 900))
+  expect_equal(plasmidplot:::drawn_span(list(start = 4800, end = 200), 5000, 0.3),
+               c(4800, 5200))
+
+  ls <- pp_style("angular", layout = "linear")
+  poly <- plasmidplot:::lin_marker_polygon(500, 500, 5000, 0.42, 0.05, "none", ls)
+  expect_equal(diff(range(poly$x)), plasmidplot:::pp_min_extent)
+  expect_equal(mean(range(poly$x)), plasmidplot:::lin_x(500, 5000, ls))
+  wide <- plasmidplot:::lin_marker_polygon(100, 900, 5000, 0.42, 0.05, "none", ls)
+  expect_equal(range(wide$x), c(plasmidplot:::lin_x(100, 5000, ls),
+                                plasmidplot:::lin_x(900, 5000, ls)))
+  with_png({
+    p <- plasmid("snp", 5000) |>
+      pp_marker(500, 500, label = "A>G", arrow = "end") |>
+      pp_marker(2000, 2000, label = "del", arrow = "both")
+    expect_no_error(plot(p))
+    expect_no_error(plot(p, style = ls))
+  }, width = 600, height = 600)
+})

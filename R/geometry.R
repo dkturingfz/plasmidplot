@@ -159,6 +159,23 @@ span_bp <- function(m, len) {
   c(m$start, end)
 }
 
+# The narrowest a feature is ever drawn, in npc. A single-base feature -- a
+# point mutation, a 1 bp `variation` read from a file -- has no extent of its
+# own and would otherwise be a zero-width shape nobody can see.
+pp_min_extent <- 0.004
+
+# Widen a span about its middle until it is at least `min` across.
+at_least <- function(a, b, min) {
+  if (b - a >= min) c(a, b) else (a + b) / 2 + c(-0.5, 0.5) * min
+}
+
+# The span a feature is drawn over on a circle of radius `r`: its own, unless
+# that is too short to see.
+drawn_span <- function(m, len, r) {
+  sp <- span_bp(m, len)
+  at_least(sp[1], sp[2], len * pp_min_extent / (2 * pi * r))
+}
+
 # The smallest total move that leaves positions at least `gap` apart and, if
 # they fit, inside [lo, hi]. Subtracting rank * gap from each sorted position
 # turns "at least gap apart" into "non-decreasing", and the closest

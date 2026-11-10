@@ -7,6 +7,13 @@
 #' The layout follows the plasmid's `topology` unless the style says
 #' otherwise; see the `layout` shape parameter in [pp_style()].
 #'
+#' Labels are placed so that they do not overlap. On a circular map they are
+#' spread up and down each side of the ring. On a linear map they sit level
+#' in up to three rows while that stays tidy, and are otherwise slanted and
+#' fanned out sideways, which is what keeps a dozen restriction sites a few
+#' bases apart readable. A feature too short to see at the map's scale, such
+#' as a single-base variant, is drawn at a small minimum width.
+#'
 #' @param x A `plasmid` object.
 #' @param style A preset name or a [pp_style()] object. Call `pp_style()` for
 #'   the available presets: `"angular"`, `"classic"`, `"dark"`, `"snapgene"`,
@@ -158,9 +165,9 @@ tick_rot <- function(theta) {
 circ_markers <- function(x, s, cols) {
   for (i in seq_along(x$markers)) {
     m <- x$markers[[i]]
-    sp <- span_bp(m, x$length)
     w <- marker_thickness(s, m)
     R <- marker_radius(s, m$offset, w)
+    sp <- drawn_span(m, x$length, R)
     hbp <- head_length(sp[2] - sp[1], x$length, m$arrow, s$arrow_deg)
     poly <- marker_polygon(sp[1], sp[2], x$length, R - w / 2, R + w / 2,
                            m$arrow, hbp, s$arrow_flare)
@@ -286,8 +293,9 @@ lin_markers <- function(x, s, cols) {
 # The linear twin of marker_polygon(): one closed outline so the body and the
 # arrowhead never show a seam between them.
 lin_marker_polygon <- function(bp1, bp2, len, y, w, arrow, s) {
-  x1 <- lin_x(bp1, len, s)
-  x2 <- lin_x(bp2, len, s)
+  xx <- at_least(lin_x(bp1, len, s), lin_x(bp2, len, s), pp_min_extent)
+  x1 <- xx[1]
+  x2 <- xx[2]
   n_heads <- switch(arrow, none = 0L, both = 2L, 1L)
   head <- if (n_heads == 0L) 0 else {
     min((x2 - x1) / (n_heads * 2),
@@ -358,42 +366,131 @@ text_width_npc <- function(txt, fontsize) {
     "npc", valueOnly = TRUE)
 }
 
-# Labels stack into as many rows as they need: on a linear map they compete
-# for horizontal room, so a single row would overlap as soon as two features
-# sit close together.
-lin_labels <- function(x, s) {
-  entries <- lin_label_entries(x, s)
-  if (!length(entries)) return(invisible())
-  xs <- vapply(entries, function(e) e$x, numeric(1))
-  widths <- vapply(entries, function(e) text_width_npc(e$text, e$fontsize),
-                   numeric(1))
-  # A label on the first or last feature would otherwise hang off the page,
-  # so pull it inside and let its leader slant instead.
-  margin <- 0.006
-  lx <- pmin(pmax(xs, widths / 2 + margin), 1 - widths / 2 - margin)
-  ord <- order(lx)
-  pad <- 0.012
-  row_h <- grid::convertHeight(
-    grid::unit(max(vapply(entries, function(e) e$fontsize, numeric(1))) * 1.7,
-               "points"), "npc", valueOnly = TRUE)
-  y_first <- max(vapply(entries, function(e) e$anchor, numeric(1))) + 0.035
+# Level text in stacked rows reads best, so it is kept for as long as it
+# stays tidy: no more rows than this, clear of the title, and no leader
+# running through a label on its way to the row above.
+lin_max_rows <- 3L
 
+# Slanted labels start on one line and rise at this angle.
+lin_slant_deg <- 45
+
+# Rows for level labels: each goes in the lowest row with room for it. On a
+# linear map labels compete for horizontal room, so a single row would
+# overlap as soon as two features sit close together.
+lin_stack_rows <- function(lx, widths, pad = 0.012) {
   row_end <- numeric(0)      # right edge of the last label placed in each row
-  row_of <- integer(length(entries))
-  for (i in ord) {
+  row_of <- integer(length(lx))
+  for (i in order(lx)) {
     r <- which(row_end < lx[i] - widths[i] / 2 - pad)
     r <- if (length(r)) r[1] else length(row_end) + 1L
     row_of[i] <- r
     row_end[r] <- lx[i] + widths[i] / 2
   }
+  row_of
+}
 
+# How high labels may reach: clear of the title when there is one.
+lin_label_ceiling <- function(s) {
+  if (!s$show_title) return(0.99)
+  0.94 - grid::convertHeight(grid::unit(s$title_fontsize * 0.9, "points"),
+                             "npc", valueOnly = TRUE)
+}
+
+# Where every label goes, and where its leader ends. Returns one row per
+# entry: text position, rotation and justification, and the leader's far end.
+lin_label_layout <- function(entries, s) {
+  xs <- vapply(entries, function(e) e$x, numeric(1))
+  sizes <- vapply(entries, function(e) e$fontsize, numeric(1))
+  widths <- vapply(entries, function(e) text_width_npc(e$text, e$fontsize),
+                   numeric(1))
+  row_h <- grid::convertHeight(grid::unit(max(sizes) * 1.7, "points"), "npc",
+                               valueOnly = TRUE)
+  anchors <- vapply(entries, function(e) e$anchor, numeric(1))
+  y_first <- max(anchors) + 0.035
+  ceiling <- lin_label_ceiling(s)
+  margin <- 0.006
+
+  # A label on the first or last feature would otherwise hang off the page,
+  # so pull it inside and let its leader slant instead.
+  lx <- pmin(pmax(xs, widths / 2 + margin), 1 - widths / 2 - margin)
+  row_of <- lin_stack_rows(lx, widths)
+  rows <- max(row_of)
+  y <- y_first + (row_of - 1L) * row_h
+  leader_y <- y - row_h * 0.32
+  if (rows <= lin_max_rows && y_first + (rows - 0.5) * row_h <= ceiling &&
+      !lin_leader_hits_label(xs, anchors, lx, leader_y, y, widths, row_of)) {
+    return(data.frame(x = lx, y = y, rot = 0, hjust = 0.5,
+                      leader_x = lx, leader_y = leader_y))
+  }
+
+  # Too crowded for rows. Slanted labels need only a line height of
+  # horizontal room each, so a dozen sites a few bases apart fan out side by
+  # side. All of them start on one line that every leader stops short of, so
+  # no leader can cross a label however tight the cluster.
+  #
+  # The slant eases off if the longest label would otherwise reach the
+  # title, but not so far that the labels lie back down on one another.
+  inch <- function(w) grid::convertWidth(grid::unit(w, "npc"), "inches",
+                                         valueOnly = TRUE)
+  room <- grid::convertHeight(grid::unit(max(ceiling - y_first, 0), "npc"),
+                              "inches", valueOnly = TRUE)
+  deg <- min(lin_slant_deg,
+             max(20, asin(min(1, room / max(inch(max(widths)), 1e-9))) *
+                   180 / pi))
+  rad <- deg * pi / 180
+  # Baselines one line apart, measured across the slant.
+  step <- grid::convertWidth(grid::unit(max(sizes) * 1.25 / sin(rad), "points"),
+                             "npc", valueOnly = TRUE)
+  n <- length(xs)
+  lo <- margin + step / 2
+  hi <- 1 - margin - widths * cos(rad)      # each label must end on the page
+  if (n > 1L) step <- min(step, max(min(hi) - lo, 0) / (n - 1L))
+  lx <- spread_positions(xs, step, lo, max(hi))
+  # A long label near the right-hand edge has less room than its neighbors:
+  # move it in, and whatever it then crowds along with it.
+  ord <- order(lx)
+  for (k in rev(seq_along(ord))) {
+    i <- ord[k]
+    cap <- if (k < n) lx[ord[k + 1L]] - step else Inf
+    lx[i] <- max(lo, min(lx[i], hi[i], cap))
+  }
+  # Labels moved far sideways would be reached by leaders lying almost flat
+  # along the map. Raise the whole line by what its longest reach needs to
+  # keep a visible slope, as far as the room under the title allows.
+  rise <- inch(max(widths)) * sin(rad)
+  lift <- min(inch(max(abs(lx - xs))) * tan(25 * pi / 180),
+              max(room - rise, 0))
+  y0 <- y_first + grid::convertHeight(grid::unit(lift, "inches"), "npc",
+                                      valueOnly = TRUE)
+  data.frame(x = lx, y = y0, rot = deg, hjust = 0,
+             leader_x = lx, leader_y = y0 - row_h * 0.25)
+}
+
+# Does any leader, on its way up to a label in a higher row, run through a
+# label in a row beneath it? The stack is only worth keeping when none does.
+lin_leader_hits_label <- function(xs, anchors, lx, leader_y, y, widths,
+                                  row_of, pad = 0.002) {
+  for (i in which(row_of > 1L)) {
+    for (j in which(row_of < row_of[i])) {
+      at <- xs[i] + (y[j] - anchors[i]) / (leader_y[i] - anchors[i]) *
+        (lx[i] - xs[i])
+      if (abs(at - lx[j]) < widths[j] / 2 + pad) return(TRUE)
+    }
+  }
+  FALSE
+}
+
+lin_labels <- function(x, s) {
+  entries <- lin_label_entries(x, s)
+  if (!length(entries)) return(invisible())
+  lay <- lin_label_layout(entries, s)
   for (i in seq_along(entries)) {
     e <- entries[[i]]
-    y <- y_first + (row_of[i] - 1L) * row_h
-    grid::grid.lines(c(e$x, lx[i]), c(e$anchor, y - row_h * 0.32),
+    grid::grid.lines(c(e$x, lay$leader_x[i]), c(e$anchor, lay$leader_y[i]),
                      default.units = "npc",
                      gp = grid::gpar(col = s$leader_col, lwd = s$leader_lwd))
-    grid::grid.text(e$text, lx[i], y, default.units = "npc",
+    grid::grid.text(e$text, lay$x[i], lay$y[i], default.units = "npc",
+                    rot = lay$rot[i], hjust = lay$hjust[i], vjust = 0.5,
                     gp = grid::gpar(col = e$col, fontsize = e$fontsize,
                                     fontface = e$fontface))
   }
