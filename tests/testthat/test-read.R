@@ -20,6 +20,26 @@ test_that("parse_location handles the GenBank location grammar", {
   expect_null(pl("unknown"))
 })
 
+test_that("parse_location reads per-segment complements in genome order", {
+  pl <- plasmidplot:::parse_location
+  # The same reverse-strand feature, written the other legal way round. It
+  # must not come out as a wrap from 300 round the origin to 200.
+  expect_equal(pl("join(complement(300..400),complement(100..200))"),
+               pl("complement(join(100..200,300..400))"))
+  # ... and one that really does cross the origin still wraps.
+  expect_equal(
+    pl("join(complement(1..40),complement(4300..4361))")[c("start", "end")],
+    list(start = 4300, end = 40))
+})
+
+test_that("parse_location ignores segments on another record", {
+  pl <- plasmidplot:::parse_location
+  # The accession's own digits are not a position.
+  expect_equal(pl("join(J00194.1:100..202,300..400)")[c("start", "end")],
+               list(start = 300, end = 400))
+  expect_null(pl("J00194.1:100..202"))
+})
+
 test_that("read_genbank reads the LOCUS header", {
   p <- read_genbank(gb_path())
   expect_s3_class(p, "plasmid")

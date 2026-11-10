@@ -170,8 +170,16 @@ parse_location <- function(loc) {
   if (!nzchar(loc)) return(NULL)
   complement <- grepl("complement", loc, fixed = TRUE)
   clean <- gsub("[<>]", "", loc)
+  # A segment such as "J00194.1:100..202" lies on another record. Drop it
+  # whole: left in, the digits of the accession would be read as a position.
+  clean <- gsub("[A-Za-z_][A-Za-z0-9_.]*:[0-9]+(\\.\\.[0-9]+)?", "", clean)
   segs <- regmatches(clean, gregexpr("[0-9]+(\\.\\.[0-9]+)?", clean))[[1]]
   if (!length(segs)) return(NULL)
+  # join(complement(300..400),complement(100..200)) is the same feature as
+  # complement(join(100..200,300..400)), but lists its segments in
+  # transcription order, last one first. Read as written it would run from
+  # 300 round the origin to 200 and cover nearly the whole plasmid.
+  if (grepl("^(join|order)\\(complement", clean)) segs <- rev(segs)
   nums_of <- function(s) as.numeric(strsplit(s, "..", fixed = TRUE)[[1]])
   first <- nums_of(segs[1])
   last <- nums_of(segs[length(segs)])
