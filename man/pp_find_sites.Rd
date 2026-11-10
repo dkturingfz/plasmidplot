@@ -18,7 +18,9 @@ pp_find_sites(
 
 \item{enzymes}{Enzyme names from \code{\link[=pp_enzymes]{pp_enzymes()}}, or a named character
 vector of recognition sequences (IUPAC codes allowed), e.g.
-\code{c(MyEnz = "GGWCC")}. \code{NULL} searches every enzyme in \code{\link[=pp_enzymes]{pp_enzymes()}}.}
+\code{c(MyEnz = "GGWCC")}. \code{NULL} searches every enzyme in \code{\link[=pp_enzymes]{pp_enzymes()}}.
+A custom sequence is searched on both strands and marked at the first
+base of each match, since no cut offset is known for it.}
 
 \item{unique_only}{Keep only enzymes that cut exactly once (default
 \code{TRUE}). This is the classic plasmid-map view: an enzyme cutting a dozen

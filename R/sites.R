@@ -123,6 +123,21 @@ iupac_regex <- function(site) {
   paste(map[chars], collapse = "")
 }
 
+# Reverse complement of a recognition sequence, ambiguity codes included.
+revcomp_site <- function(site) {
+  comp <- chartr("ACGTURYSWKMBDHVN", "TGCAAYRSWMKVHDBN", toupper(site))
+  paste(rev(strsplit(comp, "")[[1]]), collapse = "")
+}
+
+# Every start position of `rx` in `hay`, overlapping ones included. A plain
+# gregexpr() resumes after the end of each match, so the second BssHII site in
+# GCGCGCGC would be skipped and a double cutter reported as a unique one; a
+# zero-width lookahead consumes nothing and so sees them all.
+site_starts <- function(rx, hay) {
+  hits <- as.integer(gregexpr(paste0("(?=", rx, ")"), hay, perl = TRUE)[[1]])
+  hits[hits > 0L]
+}
+
 #' Find restriction sites in the plasmid sequence
 #'
 #' Searches the sequence kept by the readers and adds a [pp_site()] for each
@@ -134,6 +149,8 @@ iupac_regex <- function(site) {
 #' @param enzymes Enzyme names from [pp_enzymes()], or a named character
 #'   vector of recognition sequences (IUPAC codes allowed), e.g.
 #'   `c(MyEnz = "GGWCC")`. `NULL` searches every enzyme in [pp_enzymes()].
+#'   A custom sequence is searched on both strands and marked at the first
+#'   base of each match, since no cut offset is known for it.
 #' @param unique_only Keep only enzymes that cut exactly once (default
 #'   `TRUE`). This is the classic plasmid-map view: an enzyme cutting a dozen
 #'   times adds no information and buries the map in labels.
@@ -183,16 +200,22 @@ pp_find_sites <- function(p, enzymes = NULL, unique_only = TRUE,
   seq <- toupper(p$sequence)
   circular <- !identical(p$topology, "linear")
   for (nm in names(patterns)) {
-    rx <- iupac_regex(patterns[[nm]])
-    w <- nchar(patterns[[nm]])
+    site <- toupper(patterns[[nm]])
+    rx <- iupac_regex(site)
+    w <- nchar(site)
     # Extend by w-1 bases so a site spanning the origin is still matched.
     hay <- if (circular && nchar(seq) > w) {
       paste0(seq, substr(seq, 1L, w - 1L))
     } else seq
-    hits <- gregexpr(rx, hay)[[1]]
-    if (hits[1] == -1L) next
-    pos <- ((hits - 1L + cuts[[nm]]) %% nchar(seq)) + 1L
-    pos <- sort(unique(pos))
+    starts <- site_starts(rx, hay) - 1L + cuts[[nm]]
+    # A site that is not its own reverse complement also occurs on the other
+    # strand, where the top strand reads as the reverse complement. Only
+    # custom sequences get here -- the built-in table is all palindromes --
+    # and those carry no cut offset, so the match start is reported.
+    rc <- iupac_regex(revcomp_site(site))
+    if (!identical(rc, rx)) starts <- c(starts, site_starts(rc, hay) - 1L)
+    if (!length(starts)) next
+    pos <- sort(unique((starts %% nchar(seq)) + 1L))
     if (unique_only && length(pos) != 1L) next
     if (!unique_only && length(pos) > max_sites) next
     for (bp in pos) {

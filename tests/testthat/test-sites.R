@@ -100,6 +100,55 @@ test_that("unique_only keeps single cutters and max_sites bounds the rest", {
     pp_find_sites(p, "EcoRI", unique_only = FALSE, max_sites = 1L)$sites, 0L)
 })
 
+test_that("overlapping recognition sites are all found", {
+  # GCGCGCGC holds BssHII (GCGCGC) twice, two bases apart. Counting only the
+  # first would report a double cutter as a unique one.
+  seq <- paste0(strrep("A", 20), "GCGCGCGC", strrep("A", 20))
+  p <- plasmid("overlap", nchar(seq))
+  p$sequence <- seq
+  expect_length(pp_find_sites(p, "BssHII")$sites, 0L)
+  q <- pp_find_sites(p, "BssHII", unique_only = FALSE, show_position = FALSE)
+  expect_equal(vapply(q$sites, function(s) s$position, numeric(1)),
+               c(21, 23) + 1)                                # G^CGCGC
+})
+
+test_that("custom non-palindromic sites are found on both strands", {
+  # BsaI is GGTCTC; on the other strand the top strand reads GAGACC.
+  fwd <- paste0(strrep("A", 10), "GGTCTC", strrep("A", 30))
+  rev <- paste0(strrep("A", 30), "GAGACC", strrep("A", 10))
+  for (case in list(list(seq = fwd, at = 11), list(seq = rev, at = 31))) {
+    p <- plasmid("iis", nchar(case$seq))
+    p$sequence <- case$seq
+    q <- pp_find_sites(p, c(BsaI = "GGTCTC"), show_position = FALSE)
+    expect_length(q$sites, 1L)
+    expect_equal(q$sites[[1]]$position, case$at)
+  }
+  # One on each strand is two cuts, not a unique cutter.
+  both <- paste0(fwd, rev)
+  p <- plasmid("iis2", nchar(both))
+  p$sequence <- both
+  expect_length(pp_find_sites(p, c(BsaI = "GGTCTC"))$sites, 0L)
+  expect_length(
+    pp_find_sites(p, c(BsaI = "GGTCTC"), unique_only = FALSE)$sites, 2L)
+  # A palindrome is the same site on either strand and is counted once.
+  pal <- paste0(strrep("A", 10), "GAATTC", strrep("A", 30))
+  p <- plasmid("pal", nchar(pal))
+  p$sequence <- pal
+  expect_length(pp_find_sites(p, c(MyEnz = "gaattc"))$sites, 1L)
+})
+
+test_that("revcomp_site complements ambiguity codes", {
+  rc <- plasmidplot:::revcomp_site
+  expect_equal(rc("GGTCTC"), "GAGACC")
+  expect_equal(rc("GGWCC"), "GGWCC")
+  expect_equal(rc("ACRYKMBDHVN"), "NBDHVKMRYGT")
+  # The built-in table records a top-strand cut only, which is enough because
+  # every entry is a palindrome. An asymmetric enzyme added here would need a
+  # second cut offset before its reverse-strand sites could be placed.
+  tbl <- pp_enzymes()
+  expect_equal(vapply(tbl$site, rc, character(1), USE.NAMES = FALSE), tbl$site)
+})
+
 test_that("pp_find_sites reports missing sequences and unknown enzymes", {
   p <- read_genbank(demo_gb(), sequence = FALSE)
   expect_error(pp_find_sites(p), "no sequence")
