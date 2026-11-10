@@ -53,17 +53,35 @@ test_that("pp_find_sites locates the implanted sites at the right positions", {
   labs <- vapply(q$sites, function(s) s$label, character(1))
   pos <- vapply(q$sites, function(s) s$position, numeric(1))
   expect_setequal(labs, c("EcoRI", "BamHI", "HindIII", "NotI"))
-  # The fixture implants the recognition sequences at these starts, and each
-  # enzyme's cut offset shifts the reported position by that much.
-  expect_equal(pos[labs == "EcoRI"], 100 + 1)      # G^AATTC
-  expect_equal(pos[labs == "BamHI"], 400 + 1)      # G^GATCC
-  expect_equal(pos[labs == "HindIII"], 760 + 1)    # A^AGCTT
-  expect_equal(pos[labs == "NotI"], 1010 + 2)      # GC^GGCCGC
+  # The fixture implants the recognition sequences at these starts. A site
+  # is numbered by the last base before its top-strand cut.
+  expect_equal(pos[labs == "EcoRI"], 100)          # G^AATTC
+  expect_equal(pos[labs == "BamHI"], 400)          # G^GATCC
+  expect_equal(pos[labs == "HindIII"], 760)        # A^AGCTT
+  expect_equal(pos[labs == "NotI"], 1010 + 1)      # GC^GGCCGC
+})
+
+test_that("site numbering matches published pUC19 maps", {
+  # The pUC19 polylinker from EcoRI to KpnI, placed so EcoRI starts at 396 as
+  # it does in the real plasmid. SnapGene and NEB both print EcoRI (396),
+  # SacI (406) and KpnI (412) for it.
+  seq <- paste0(strrep("A", 395), "GAATTCGAGCTCGGTACC", strrep("A", 200))
+  p <- plasmid("mcs", nchar(seq))
+  p$sequence <- seq
+  q <- pp_find_sites(p, c("EcoRI", "SacI", "KpnI"))
+  expect_setequal(vapply(q$sites, function(s) s$label, character(1)),
+                  c("EcoRI (396)", "SacI (406)", "KpnI (412)"))
+  # A cut after the last base of the molecule wraps to it, not past it.
+  seq <- paste0("C", strrep("A", 40), "GGTAC")
+  p <- plasmid("wrapcut", nchar(seq))
+  p$sequence <- seq
+  q <- pp_find_sites(p, "KpnI", show_position = FALSE)
+  expect_equal(q$sites[[1]]$position, nchar(seq))
 })
 
 test_that("pp_find_sites labels carry the position when asked", {
   p <- pp_find_sites(read_genbank(demo_gb()), "EcoRI")
-  expect_equal(p$sites[[1]]$label, "EcoRI (101)")
+  expect_equal(p$sites[[1]]$label, "EcoRI (100)")
 })
 
 test_that("pp_find_sites accepts custom recognition sequences", {
@@ -81,8 +99,9 @@ test_that("pp_find_sites finds sites that straddle the origin", {
   p$sequence <- seq
   q <- pp_find_sites(p, "EcoRI", show_position = FALSE)
   expect_length(q$sites, 1L)
-  # Recognition starts at the last two bases; the G^AATTC cut is one in.
-  expect_equal(q$sites[[1]]$position, nchar(seq))
+  # Recognition starts at the last two bases; the base before the G^AATTC
+  # cut is the G itself.
+  expect_equal(q$sites[[1]]$position, nchar(seq) - 1)
 
   # A linear molecule has no wrap, so the same sequence yields nothing.
   p$topology <- "linear"
@@ -109,7 +128,7 @@ test_that("overlapping recognition sites are all found", {
   expect_length(pp_find_sites(p, "BssHII")$sites, 0L)
   q <- pp_find_sites(p, "BssHII", unique_only = FALSE, show_position = FALSE)
   expect_equal(vapply(q$sites, function(s) s$position, numeric(1)),
-               c(21, 23) + 1)                                # G^CGCGC
+               c(21, 23))                                    # G^CGCGC
 })
 
 test_that("custom non-palindromic sites are found on both strands", {

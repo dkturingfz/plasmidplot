@@ -80,8 +80,8 @@ pp_features <- function(p, df) {
 #' The recognition sequences [pp_find_sites()] searches for.
 #'
 #' @return A data frame with columns `enzyme`, `site` (recognition sequence,
-#'   IUPAC codes allowed) and `cut` (0-based cut offset on the top strand
-#'   within the recognition sequence).
+#'   IUPAC codes allowed) and `cut` (the number of bases of the recognition
+#'   sequence that lie before the cut on the top strand: 1 for `G^AATTC`).
 #' @examples
 #' head(pp_enzymes())
 #' subset(pp_enzymes(), enzyme %in% c("EcoRI", "BamHI"))
@@ -146,6 +146,11 @@ site_starts <- function(rx, hay) {
 #' cut position. On a circular plasmid the search wraps the origin, so a site
 #' straddling position 1 is not missed.
 #'
+#' A site is numbered by the last base before the cut on the top strand, the
+#' convention 'SnapGene' and NEB maps use, so positions can be compared with
+#' theirs directly: on pUC19, `GAATTC` starting at base 396 is `EcoRI (396)`
+#' and `GGTACC` starting at base 408 is `KpnI (412)`.
+#'
 #' @param p A `plasmid` object carrying a sequence (the readers keep one;
 #'   [read_fasta()] gives you a bare backbone with just the sequence).
 #' @param enzymes Enzyme names from [pp_enzymes()], or a named character
@@ -186,7 +191,9 @@ pp_find_sites <- function(p, enzymes = NULL, unique_only = TRUE,
     cuts <- stats::setNames(tbl$cut, tbl$enzyme)
   } else if (!is.null(names(enzymes))) {
     patterns <- enzymes
-    cuts <- stats::setNames(rep(0L, length(enzymes)), names(enzymes))
+    # No cut is known for a custom sequence, so it is marked at its first
+    # base -- which is where a cut offset of 1 lands.
+    cuts <- stats::setNames(rep(1L, length(enzymes)), names(enzymes))
   } else {
     unknown <- setdiff(enzymes, tbl$enzyme)
     if (length(unknown)) {
@@ -209,7 +216,10 @@ pp_find_sites <- function(p, enzymes = NULL, unique_only = TRUE,
     hay <- if (circular && nchar(seq) > w) {
       paste0(seq, substr(seq, 1L, w - 1L))
     } else seq
-    starts <- site_starts(rx, hay) - 1L + cuts[[nm]]
+    # A site is numbered by the last base before the top-strand cut, as
+    # SnapGene and NEB maps number it: G^AATTC starting at 396 is EcoRI (396),
+    # GGTAC^C starting at 408 is KpnI (412).
+    starts <- site_starts(rx, hay) + cuts[[nm]] - 2L
     # A site that is not its own reverse complement also occurs on the other
     # strand, where the top strand reads as the reverse complement. Only
     # custom sequences get here -- the built-in table is all palindromes --

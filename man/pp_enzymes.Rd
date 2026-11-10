@@ -8,8 +8,8 @@ pp_enzymes()
 }
 \value{
 A data frame with columns \code{enzyme}, \code{site} (recognition sequence,
-IUPAC codes allowed) and \code{cut} (0-based cut offset on the top strand
-within the recognition sequence).
+IUPAC codes allowed) and \code{cut} (the number of bases of the recognition
+sequence that lie before the cut on the top strand: 1 for \code{G^AATTC}).
 }
 \description{
 The recognition sequences \code{\link[=pp_find_sites]{pp_find_sites()}} searches for.

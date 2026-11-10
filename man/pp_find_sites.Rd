@@ -40,6 +40,12 @@ Searches the sequence kept by the readers and adds a \code{\link[=pp_site]{pp_si
 cut position. On a circular plasmid the search wraps the origin, so a site
 straddling position 1 is not missed.
 }
+\details{
+A site is numbered by the last base before the cut on the top strand, the
+convention 'SnapGene' and NEB maps use, so positions can be compared with
+theirs directly: on pUC19, \code{GAATTC} starting at base 396 is \code{EcoRI (396)}
+and \code{GGTACC} starting at base 408 is \code{KpnI (412)}.
+}
 \examples{
 p <- read_genbank(system.file("extdata", "pDemo.gb", package = "plasmidplot"))
 p <- pp_find_sites(p, c("EcoRI", "BamHI", "HindIII", "NotI"))
