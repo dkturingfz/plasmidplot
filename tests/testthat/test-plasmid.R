@@ -329,3 +329,51 @@ test_that("the scale of a very short molecule stays on whole base pairs", {
     }
   }
 })
+
+test_that("spread_positions separates labels with the smallest move", {
+  sp <- plasmidplot:::spread_positions
+  # Already clear of each other: nothing moves.
+  expect_equal(sp(c(0.2, 0.5, 0.8), 0.1), c(0.2, 0.5, 0.8))
+  # A crowded run opens up about its own middle rather than marching one way.
+  out <- sp(rep(0.5, 5), 0.1)
+  expect_equal(diff(out), rep(0.1, 4))
+  expect_equal(mean(out), 0.5)
+  # Input order is kept, whatever order the positions arrive in.
+  want <- c(0.52, 0.10, 0.50, 0.51)
+  out <- sp(want, 0.1)
+  expect_equal(order(out), order(want))
+  expect_true(all(diff(sort(out)) >= 0.1 - 1e-12))
+  expect_equal(out[2], 0.10)
+  # Held inside the limits when there is room for the whole run.
+  out <- sp(rep(0.02, 6), 0.1, lo = 0, hi = 1)
+  expect_gte(min(out), 0)
+  expect_true(all(diff(out) >= 0.1 - 1e-12))
+  out <- sp(rep(0.99, 6), 0.1, lo = 0, hi = 1)
+  expect_lte(max(out), 1)
+  expect_equal(sp(0.3, 0.1), 0.3)
+  expect_equal(sp(numeric(0), 0.1), numeric(0))
+})
+
+test_that("a crowded cloning site keeps its labels on the page", {
+  # Fourteen sites within 70 bp, wherever on the circle they fall. Pushing
+  # every label downward used to run the stack off the bottom of the page.
+  gap <- 0.03
+  for (center in c(20, 700, 1343, 2000, 2680)) {
+    bp <- ((center + (1:14 - 7) * 5 - 1) %% 2686) + 1
+    lay <- plasmidplot:::layout_labels(bp, 2686, 0.365, gap)
+    expect_true(all(lay$y > 0 & lay$y < 1), info = center)
+    expect_true(all(lay$x > 0 & lay$x < 1), info = center)
+    for (sd in c(1, -1)) {
+      ys <- sort(lay$y[lay$side == sd])
+      expect_true(all(diff(ys) >= gap - 1e-9), info = center)
+    }
+  }
+  # Labels with room to spare stay exactly where their feature points.
+  lay <- plasmidplot:::layout_labels(c(300, 1000, 1700, 2400), 2686, 0.365, gap)
+  th <- plasmidplot:::pp_theta(c(300, 1000, 1700, 2400), 2686)
+  expect_equal(lay$x, plasmidplot:::pp_x(th, 0.365))
+  expect_equal(lay$y, plasmidplot:::pp_y(th, 0.365))
+  # Two labels on one position stack first-added on top.
+  lay <- plasmidplot:::layout_labels(c(500, 500), 2686, 0.365, gap)
+  expect_gt(lay$y[1], lay$y[2])
+})

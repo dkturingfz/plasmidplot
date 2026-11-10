@@ -159,27 +159,45 @@ span_bp <- function(m, len) {
   c(m$start, end)
 }
 
-# Greedy vertical spread of labels on each side of the map so they don't
-# overlap. Returns anchor x/y and hjust per label.
+# The smallest total move that leaves positions at least `gap` apart and, if
+# they fit, inside [lo, hi]. Subtracting rank * gap from each sorted position
+# turns "at least gap apart" into "non-decreasing", and the closest
+# non-decreasing sequence is exactly what isotonic regression returns.
+spread_positions <- function(want, gap, lo = -Inf, hi = Inf) {
+  n <- length(want)
+  if (n < 2L) return(want)
+  ord <- order(want)
+  rank_gap <- seq_len(n) * gap
+  z <- stats::isoreg(want[ord] - rank_gap)$yf
+  if ((n - 1L) * gap <= hi - lo) {
+    z <- pmin(pmax(z, lo - gap), hi - n * gap)
+  }
+  out <- numeric(n)
+  out[ord] <- z + rank_gap
+  out
+}
+
+# Vertical spread of labels on each side of the map so they don't overlap.
+# A crowded run -- the dozen unique cutters of a cloning site -- is spread
+# about its own middle and held inside the viewport. Pushing every label the
+# same way instead walks the run off the page, or round the ring and across
+# the features it has to pass. Returns anchor x/y and hjust per label.
 layout_labels <- function(mid_bp, len, label_r, min_gap) {
   theta <- pp_theta(mid_bp, len)
   x <- pp_x(theta, label_r)
   y <- pp_y(theta, label_r)
   side <- ifelse(cos(theta) >= 0, 1, -1)
+  edge <- min_gap / 2
   for (sd in c(1, -1)) {
     idx <- which(side == sd)
-    if (length(idx) < 2L) next
-    ord <- idx[order(y[idx], decreasing = TRUE)]
-    for (k in 2:length(ord)) {
-      prev <- ord[k - 1L]
-      cur <- ord[k]
-      if (y[prev] - y[cur] < min_gap) y[cur] <- y[prev] - min_gap
-    }
-    # Re-anchor pushed labels on the label circle where possible.
-    for (i in idx) {
-      dy <- y[i] - 0.5
-      x[i] <- 0.5 + sd * sqrt(max(label_r^2 - dy^2, 0.03^2))
-    }
+    if (!length(idx)) next
+    # Two labels on one spot (EagI and NotI share a cut) stack in the order
+    # they were added, first one on top.
+    idx <- idx[order(y[idx], -idx)]
+    y[idx] <- spread_positions(y[idx], min_gap, edge, 1 - edge)
+    # Re-anchor moved labels on the label circle where possible.
+    dy <- y[idx] - 0.5
+    x[idx] <- 0.5 + sd * sqrt(pmax(label_r^2 - dy^2, 0.03^2))
   }
   list(x = x, y = y, hjust = ifelse(side == 1, 0, 1), side = side)
 }
