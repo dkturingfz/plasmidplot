@@ -123,7 +123,15 @@ pp_find_sites(p, unique_only = FALSE, max_sites = 3)
 ```
 
 `pp_enzymes()` lists the built-in table. On a circular molecule the search
-wraps the origin, so a site straddling position 1 is not missed.
+wraps the origin, so a site straddling position 1 is not missed. Overlapping
+sites are all counted, and a custom sequence that is not a palindrome is
+searched on both strands.
+
+A site is numbered by the last base before the cut on the top strand, the
+way 'SnapGene' and NEB maps number it, so positions can be compared with
+theirs directly: on pUC19, `G^AATTC` starting at base 396 is `EcoRI (396)`
+and `GGTAC^C` starting at base 408 is `KpnI (412)`. A custom sequence has no
+known cut and is marked at its first base.
 
 ## Styles are shape parameters
 
@@ -180,6 +188,11 @@ The shape parameters mean the same thing in both layouts -- `anchor =
 style stays recognizable when the layout changes. A feature that wraps the
 origin is drawn as the two pieces it would occupy, since a linear molecule
 cannot have one.
+
+Labels are placed so that they do not overlap in either layout. On a linear
+map they sit level, in up to three rows, while that stays tidy; a crowded map
+like this one slants them and fans them out sideways instead, so that no
+leader has to run through another label.
 
 ## Palettes are a separate choice
 

@@ -1,6 +1,7 @@
 # plasmidplot
 
 <!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/plasmidplot)](https://CRAN.R-project.org/package=plasmidplot)
 [![R-CMD-check](https://github.com/dkturingfz/plasmidplot/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dkturingfz/plasmidplot/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
@@ -37,10 +38,10 @@ plot(p, style = pp_style("minimal", layout = "linear"))
 - 🧬 **环形与线性**两种布局，按质粒拓扑自动选择
 - 🔧 风格由七个正交的形状参数构成（`layout` `anchor` `backbone` `radius` `track` `arc` `gap`），预设只是常用组合
 - 📥 导入 **GenBank / EMBL / FASTA / SnapGene / 纯序列**，按文件内容自动识别
-- ✂️ **限制性酶切位点**：内置 46 种常用酶，自动搜索并标注单切位点
+- ✂️ **限制性酶切位点**：内置 46 种常用酶，自动搜索并标注单切位点，位置编号与 SnapGene / NEB 图谱一致
 - 🎨 8 种风格 + 7 组配色，所有字段可自定义
 - 🌈 **直接支持 ggsci / ggpubr / RColorBrewer / viridis 等外部配色**，并可用 `pp_check_palette()` 检查其色觉安全性
-- 🏷️ 特征标签与位点标签**统一布局**，互不压盖
+- 🏷️ 特征标签与位点标签**统一布局**，互不压盖；多克隆位点那样挤在一起的十几个标签也排得开，不会跑出画布
 - ➡️ 箭头为单一闭合路径，**没有接缝**；支持正向 / 反向 / 双向
 - ↩️ 支持跨越原点（origin）的特征和酶切位点
 - 🖼️ **样式不绘制底色**，画进任何背景都不会被覆盖
@@ -49,9 +50,15 @@ plot(p, style = pp_style("minimal", layout = "linear"))
 ## 安装
 
 ```r
+# CRAN 正式版（0.1.0）
+install.packages("plasmidplot")
+
+# 开发版（0.1.1，本 README 描述的版本）
 # install.packages("remotes")
 remotes::install_github("dkturingfz/plasmidplot")
 ```
+
+0.1.1 相对 CRAN 上的 0.1.0 有一处**行为变更**（酶切位点编号小 1）和若干修复，详见[更新日志](#更新日志)。
 
 ## 快速开始
 
@@ -90,7 +97,7 @@ p <- read_snapgene("x.dna")   # SnapGene（需要 xml2）
 
 `read_plasmid()` **不看扩展名，只看内容**——`.dna` 既可能是 SnapGene 二进制，也可能是纯序列文本，甚至存成 `.txt` 的 GenBank 记录都能正确识别。
 
-解析内容包括：名称 / 长度 / 拓扑、`complement(...)` 链方向、`join(...)` 跨原点特征、`<`/`>` 部分边界、SnapGene 的双向特征（画成双箭头）。序列默认保留在 `p$sequence`，供酶切搜索使用；若序列长度与头部声明不符（文件被截断），会**拒绝采用并警告**，避免位置换算全错。
+解析内容包括：名称 / 长度 / 拓扑、`complement(...)` 链方向、`join(...)` 跨原点特征（`complement(join(...))` 和 `join(complement(...),complement(...))` 两种写法都认）、`<`/`>` 部分边界、SnapGene 的双向特征（画成双箭头）。指向其他记录的片段（如 `J00194.1:100..202`）会被忽略。序列默认保留在 `p$sequence`，供酶切搜索使用；若序列长度与头部声明不符（文件被截断），会**拒绝采用并警告**，避免位置换算全错。
 
 ```r
 read_genbank("x.gb",
@@ -116,6 +123,18 @@ plot(p)
 ![sites](man/figures/sites.png)
 
 默认只标注**单切酶**（`unique_only = TRUE`）——这是经典质粒图的惯例，切十几刀的酶除了把图淹没在标签里没有任何信息量。要放宽用 `unique_only = FALSE, max_sites = 3`。环形质粒会自动搜索跨原点的位点。
+
+**位置怎么编号。** 位点按上链切口**前**的最后一个碱基编号，和 SnapGene、NEB 图谱的写法一致，所以数字可以直接对照：
+
+| 酶 | 识别序列与切点 | 识别序列起始于 | 标注为 |
+|---|---|---|---|
+| EcoRI | `G^AATTC` | 396 | `EcoRI (396)` |
+| SacI | `GAGCT^C` | 402 | `SacI (406)` |
+| KpnI | `GGTAC^C` | 408 | `KpnI (412)` |
+
+（以上正是 pUC19 多克隆位点上的三个位点。）自定义识别序列没有切点信息，标在匹配的第一个碱基上。
+
+**搜索的细节。** 相互重叠的位点都会找到——`GCGCGCGC` 里有两个 BssHII 位点，不会被当成单切。自定义的非回文序列（如 `c(BsaI = "GGTCTC")`）会在**两条链**上搜索；内置酶表全部是回文序列，一条链就够。
 
 `pp_enzymes()` 查看内置酶表；也可以手工加单个位点：`pp_site(p, 396, "EcoRI")`。
 
@@ -150,7 +169,15 @@ plot(p, style = pp_style("angular", layout = "linear"))
 
 ![linear styles](man/figures/styles-linear.png)
 
-线性布局下：跨原点的特征会拆成首尾两段绘制（环状分子才有的东西，线性图上诚实地画成两块）；标签稀疏时水平排布、按需要叠成至多三行；一旦拥挤（比如多克隆位点上十几个挨在一起的酶切位点），就整体改为斜排并横向展开，引线不会穿过别的标签，也不会顶到标题；刻度和数字在下方，标签和酶切位点在上方。
+线性布局下：跨原点的特征会拆成首尾两段绘制（环状分子才有的东西，线性图上诚实地画成两块）；刻度和数字在下方，标签和酶切位点在上方。
+
+### 标签怎么排
+
+标签的位置是自动算的，目标是互不压盖、引线不穿过文字、不跑出画布：
+
+- **环形图**：标签沿圆环两侧上下展开。挤在一起的一簇标签以簇的中点为中心向两边摊开，并限制在画布之内；本来就不重叠的标签原地不动。
+- **线性图**：标签稀疏时水平排布，按需要叠成至多三行。一旦三行放不下、会顶到标题、或者有引线要穿过别的标签，就**整体改为斜排**并横向展开——所有标签从同一条线起笔，引线停在这条线下方，所以无论多挤都不会交叉。标签很长而画布很矮时，斜角会自动放平一些以免顶到标题。上面两张图里的线性图都是斜排的结果。
+- **极短的特征**（比如 1 bp 的点突变）按一个最小宽度绘制，不会因为没有宽度而消失。
 
 "默认配色"只是预设自带的选择，不是绑定的——任意风格都能配任意配色：
 
@@ -278,8 +305,11 @@ grDevices::cairo_pdf("plasmid.pdf", width = 6, height = 6); plot(p); dev.off()
 
 - `arrow`：`"end"` 顺时针（正链）、`"start"` 逆时针（负链）、`"both"` 双向、`"none"` 无
 - `end < start` 表示特征跨越原点
+- `start == end` 是合法的单碱基特征，会按最小可见宽度绘制
 - `group` 让同组特征共用一个调色板颜色
 - `offset` 径向偏移，用于错开重叠特征
+
+参数在**传入时**就会检查：`label` 传了向量、`color` 不是 R 认识的颜色、`offset` 不是数值，都会当场报出是哪个参数，而不是等到 `plot()` 时在 grid 内部报一个看不懂的错。`pp_style()` 同理，未命名的覆盖项（`pp_style("angular", 0.3)`）会报错而不是被悄悄丢掉。
 
 ## 拼版
 
@@ -296,7 +326,11 @@ plot(p2, newpage = FALSE); grid::popViewport()
 
 ## 仓库里的图
 
-`man/figures/` 下每张图只变化一个维度，其余固定，并在说明里写明固定了什么。全部由 `dev/figures.R` 一个脚本生成，改了代码重跑一次即可，不会出现互相矛盾的旧图：
+`man/figures/` 下每张图只变化一个维度，其余固定，并在说明里写明固定了什么。全部由 `dev/figures.R` 一个脚本生成，改了代码在包的根目录重跑一次即可，不会出现互相矛盾的旧图：
+
+```sh
+Rscript dev/figures.R
+```
 
 | 文件 | 内容 | 固定不变的是 |
 |---|---|---|
@@ -309,6 +343,39 @@ plot(p2, newpage = FALSE); grid::popViewport()
 | `import.png` | 从 GenBank 导入的结果 | — |
 
 `dev/` 下的其他脚本：`make-fixtures.R` 生成 `inst/extdata` 的测试数据（序列与酶切位点由代码保证一致），`verify-checker.R` 对照校验 `pp_check_palette()` 的数值，`summary.R` 打印各预设的形状参数表。
+
+## 更新日志
+
+完整记录见 [NEWS.md](NEWS.md)。
+
+### 0.1.1（开发版，尚未提交 CRAN）
+
+**行为变更**
+
+- `pp_find_sites()` 的位点编号改为切口前的最后一个碱基，与 SnapGene / NEB 一致。**所有位置比 0.1.0 小 1**：pUC19 的 EcoRI 现在是 396，不再是 397。
+
+**修复**
+
+- `pp_find_sites()` 能找到相互重叠的位点了。以前 `GCGCGCGC` 里的两个 BssHII 位点只算一个，双切酶会被标成单切酶。
+- `pp_find_sites()` 对自定义的非回文识别序列（如 `c(BsaI = "GGTCTC")`）会搜索两条链。
+- `read_genbank()` / `read_embl()` 把 `join(complement(300..400),complement(100..200))` 正确读成 100..400，而不是绕原点一圈；不再把远程片段（`J00194.1:100..202`）登录号里的数字当成位置。
+- 几十 bp 的短分子，刻度不再落在 2.5 bp 这样的非整数位置上。
+
+**布局**
+
+- 环形图上挤在一起的标签以簇的中点为中心展开并留在画布内，不再一路往下推出画布或横穿特征。
+- 线性图上挤在一起的标签改为斜排并横向展开，不再叠成一座引线穿过文字的高塔。
+- 粗体标签（`blueprint` 风格）按粗体宽度测量，长标签不会再伸出画布右边。
+- 单碱基特征按最小宽度绘制，不再不可见。
+
+**检查**
+
+- `pp_marker()`、`pp_site()`、`pp_style()`、`plot()` 在传入时就拒绝错误的标签、颜色、偏移、宽度、底色和形状数值。
+- `pp_style()` 对未命名的覆盖项报错，不再静默忽略。
+
+### 0.1.0
+
+- 首个 CRAN 版本。
 
 ## Roadmap
 

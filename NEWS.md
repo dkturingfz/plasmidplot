@@ -31,6 +31,8 @@
   crossing a label, are drawn as before.
 * A feature too short to see, such as one of a single base, is drawn at a
   small minimum width instead of vanishing.
+* A bold label, as the `blueprint` style sets them, is measured bold. Measured
+  plain, a long one near the right-hand end of a linear map ran off the page.
 
 ## Checks
 
@@ -38,3 +40,7 @@
   color, offset, width, background or shape number where it is given, rather
   than failing inside 'grid' at draw time.
 * `pp_style()` reports an unnamed override instead of ignoring it.
+
+# plasmidplot 0.1.0
+
+* Initial CRAN release.
