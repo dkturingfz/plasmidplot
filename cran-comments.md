@@ -1,49 +1,102 @@
 # cran-comments
 
-## Resubmission
+<!--
+BEFORE SUBMITTING -- delete this block once every line is done.
 
-This is a resubmission. In response to the review:
+Only the Ubuntu check below has been run on 0.1.1. The other environments
+are listed with "NOT YET RUN" and must be run, and their lines filled in,
+before this file is sent:
 
-- The maintainer is now given with a first and last name.
-- The commented-out code line in the pp_style() examples is replaced by
-  code that runs.
-- `\dontrun{}` is removed. The two examples it wrapped used undeclared
-  packages; they now use grDevices palettes and run unconditionally. All
-  examples run in well under 5 seconds (slowest 0.08 s).
-- The read_snapgene() example is wrapped in
-  if (requireNamespace("xml2", quietly = TRUE)), since xml2 is in Suggests.
+  1. devtools::check_win_devel()        win-builder, R-devel
+  2. Open a pull request into main      runs the six-platform GitHub Actions
+                                        matrix (macOS, Windows release and
+                                        devel, Ubuntu devel/release/oldrel-1)
+  3. R CMD check --as-cran locally      with the PDF manual, which none of
+                                        the automated runs build
+  4. tools::package_dependencies("plasmidplot", reverse = TRUE)
+                                        confirm there are still none
+  5. Update the "R CMD check results" line if any run reports a note.
+
+CRAN asks for updates no more often than every one to two months. 0.1.0 was
+only just published, so an early 0.1.1 needs the reason given under
+"Why an update so soon" below to still be true, and win-builder will add a
+"Days since last update" note if it goes in within a week.
+-->
+
+## Update
+
+This is an update of plasmidplot from 0.1.0, which is on CRAN, to 0.1.1.
+It fixes bugs found after release and changes one result users can see.
+
+### The change in results
+
+`pp_find_sites()` now numbers a restriction site by the last base before the
+cut on the top strand, which is how 'SnapGene' and NEB maps number it. 0.1.0
+reported the first base after the cut, so every position was one higher than
+on any published map of the same plasmid: EcoRI on pUC19 came out as 397
+against the 396 it is known by. Positions are now one lower than in 0.1.0.
+This is recorded first in NEWS.md, under "Changed behavior", and documented
+in `?pp_find_sites`.
+
+### Bug fixes
+
+- `pp_find_sites()` missed the second of two overlapping sites, so an enzyme
+  cutting twice could be reported as a unique cutter.
+- `pp_find_sites()` searched only the top strand for a custom recognition
+  sequence that is not a palindrome.
+- `read_genbank()` and `read_embl()` misread a location written as
+  `join(complement(...),complement(...))` as a feature wrapping the origin,
+  and read the digits of an accession in a remote segment as a position.
+- Crowded labels ran off the page on circular maps and stacked over the
+  title on linear ones; a feature of a single base was drawn with no width.
+- Arguments that could not be drawn (a vector label, an unknown color) were
+  accepted and failed later inside 'grid'; they are now rejected where they
+  are given.
+
+No function, argument or default was removed or renamed. `stats` is added to
+Imports; it was already used as `stats::setNames()`.
+
+### Why an update so soon
+
+0.1.0 reports restriction-site positions that disagree by one with every
+other tool, and can call a double cutter unique. Both are wrong answers
+rather than missing features, in the part of the package people use to plan
+cloning, so they are better corrected early than left for the usual interval.
 
 ## Test environments
 
-- Windows 11, R 4.6.0 (local): `R CMD check --as-cran`, manual included
-- win-builder, R 4.6.1: Status 1 NOTE (the one below)
-- GitHub Actions: macOS release, Windows release, Windows devel,
-  Ubuntu devel / release / oldrel-1, all with `--as-cran`
+- Ubuntu 24.04, R 4.3.3: `R CMD check --as-cran --no-manual`, Status OK
+- win-builder, R-devel: NOT YET RUN
+- GitHub Actions, macOS release, Windows release, Windows devel,
+  Ubuntu devel / release / oldrel-1, all with `--as-cran`: NOT YET RUN
+- Local `R CMD check --as-cran` with the PDF manual: NOT YET RUN
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 0 notes
 
-The note is the spell check on DESCRIPTION:
+on the one environment run so far. That run had no internet access, so the
+CRAN incoming checks and the system-clock check did not take part in it.
 
-```
-Possibly misspelled words in DESCRIPTION:
-  Plasmid (2:48)
-  callout (8:66)
-  plasmid (7:40, 10:13)
-```
+If win-builder repeats the spell-check note 0.1.0 had on DESCRIPTION
+("Plasmid", "plasmid", "callout"), all three are correct: "plasmid" is the
+standard term for the circular DNA molecule this package draws maps of, and
+"callout" is the standard term for a label placed away from the thing it
+names and joined to it by a leader line.
 
-All three are correct. "Plasmid" is the standard term for the circular DNA
-molecule this package draws maps of, and "callout" is the standard term for a
-label placed away from the thing it names and joined to it by a leader line,
-which is how the maps are annotated.
+## Reverse dependencies
+
+None known. 0.1.0 is newly published. (To be confirmed before submission.)
 
 ## Notes for the reviewer
 
+- All examples run unconditionally and in well under 5 seconds; the slowest
+  is `read_snapgene()` at 0.13 s. Its example is wrapped in
+  `if (requireNamespace("xml2", quietly = TRUE))`, since xml2 is in Suggests.
 - The package has no dependencies outside base R and the recommended
-  packages; `xml2` is only needed to read 'SnapGene' files and is in Suggests,
-  guarded by `requireNamespace()`.
+  packages; `xml2` is only needed to read 'SnapGene' files and is guarded by
+  `requireNamespace()`.
 - `inst/extdata/` holds five small fixture files (GenBank, EMBL, FASTA and a
   minimal binary 'SnapGene' record) so the readers' examples and tests run
-  against real files. They are generated by `dev/make-fixtures.R` and total
-  under 20 kB.
+  against real files. They are generated by `dev/make-fixtures.R`, total
+  under 20 kB, and are unchanged from 0.1.0.
