@@ -360,9 +360,12 @@ lin_label_entries <- function(x, s) {
   out
 }
 
-text_width_npc <- function(txt, fontsize) {
+# Width as drawn: a bold label is wider than the same text set plain, and a
+# label measured plain would be let run off the edge of the page.
+text_width_npc <- function(txt, fontsize, fontface = "plain") {
   grid::convertWidth(
-    grid::grobWidth(grid::textGrob(txt, gp = grid::gpar(fontsize = fontsize))),
+    grid::grobWidth(grid::textGrob(txt, gp = grid::gpar(fontsize = fontsize,
+                                                        fontface = fontface))),
     "npc", valueOnly = TRUE)
 }
 
@@ -401,8 +404,9 @@ lin_label_ceiling <- function(s) {
 lin_label_layout <- function(entries, s) {
   xs <- vapply(entries, function(e) e$x, numeric(1))
   sizes <- vapply(entries, function(e) e$fontsize, numeric(1))
-  widths <- vapply(entries, function(e) text_width_npc(e$text, e$fontsize),
-                   numeric(1))
+  widths <- vapply(entries, function(e) {
+    text_width_npc(e$text, e$fontsize, e$fontface)
+  }, numeric(1))
   row_h <- grid::convertHeight(grid::unit(max(sizes) * 1.7, "points"), "npc",
                                valueOnly = TRUE)
   anchors <- vapply(entries, function(e) e$anchor, numeric(1))

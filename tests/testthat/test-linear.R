@@ -269,6 +269,25 @@ test_that("a crowded linear map slants its labels and keeps them apart", {
   }
 })
 
+test_that("bold labels are measured bold, so they stay on the page", {
+  with_png({
+    tw <- plasmidplot:::text_width_npc
+    expect_gt(tw("origin-spanning region", 9, "bold"),
+              tw("origin-spanning region", 9, "plain"))
+    # blueprint sets its labels bold; a long one on the last feature of a
+    # crowded map must still end inside the viewport.
+    s <- pp_style("blueprint", layout = "linear")
+    p <- mcs_plasmid(1343) |>
+      pp_marker(2600, 2686, label = "origin-spanning region")
+    entries <- plasmidplot:::lin_label_entries(p, s)
+    lay <- plasmidplot:::lin_label_layout(entries, s)
+    widths <- vapply(entries, function(e) tw(e$text, e$fontsize, e$fontface),
+                     numeric(1))
+    expect_true(all(lay$rot > 0))
+    expect_true(all(lay$x + widths * cos(lay$rot * pi / 180) < 1))
+  })
+})
+
 test_that("a leader through a label below it is detected", {
   hit <- plasmidplot:::lin_leader_hits_label
   # Label 2 sits in row 2 straight above label 1: its leader goes through it.
