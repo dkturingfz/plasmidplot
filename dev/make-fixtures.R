@@ -1,7 +1,9 @@
 # Generates the test fixtures. Run from the package root; the sequence is
 # built here rather than hand-typed so its length always matches the header
 # and the enzyme sites are exactly the ones the tests expect.
-setwd("i:/plasmidplot")
+if (!file.exists("DESCRIPTION")) {
+  stop("Run this script from the package root.", call. = FALSE)
+}
 set.seed(42)
 
 LEN <- 1200

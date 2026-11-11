@@ -1,4 +1,6 @@
-setwd("i:/plasmidplot")
+if (!file.exists("DESCRIPTION")) {
+  stop("Run this script from the package root.", call. = FALSE)
+}
 pkgload::load_all(quiet = TRUE)
 for (nm in pp_palette()) {
   mode <- if (grepl("_dark$", nm)) "dark" else "light"

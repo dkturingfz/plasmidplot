@@ -1,6 +1,9 @@
 # Generates everything in man/figures. One script so the sheets stay
 # consistent with each other: each varies exactly ONE dimension and says so.
-setwd("i:/plasmidplot")
+# Run from the package root: Rscript dev/figures.R
+if (!file.exists("DESCRIPTION")) {
+  stop("Run this script from the package root.", call. = FALSE)
+}
 pkgload::load_all(quiet = TRUE)
 unlink(list.files("man/figures", full.names = TRUE))
 dir.create("man/figures", recursive = TRUE, showWarnings = FALSE)
@@ -42,12 +45,16 @@ sheet <- function(items, path, draw, ncol = 4, w = 3200, h = 1680) {
   cat("wrote", path, "\n")
 }
 
-caption <- function(text, on_dark, note = NULL, y = 0.055) {
-  grid::grid.text(text, y = y, gp = grid::gpar(
+# Captions sit a fixed distance in points above the panel's bottom edge.
+# Placed as a share of the panel's height, the note was cut in half on the
+# tall circular panels and ran into the name above it on the short linear
+# ones.
+caption <- function(text, on_dark, note = NULL) {
+  grid::grid.text(text, y = grid::unit(34, "points"), gp = grid::gpar(
     fontsize = 15, fontface = "bold",
     col = if (on_dark) "#ffffff" else "#0b0b0b"))
   if (!is.null(note)) {
-    grid::grid.text(note, y = y - 0.048, gp = grid::gpar(
+    grid::grid.text(note, y = grid::unit(14, "points"), gp = grid::gpar(
       fontsize = 10, col = if (on_dark) "#9aa4b2" else "#6d6b66"))
   }
 }
@@ -67,7 +74,7 @@ sheet(pp_style(), "man/figures/styles-linear.png", function(st) {
   plot(mapped, bg = pp_canvas(st), newpage = FALSE,
        style = pp_style(st, layout = "linear", show_title = FALSE,
                         palette = if (on_dark) "default_dark" else "default"))
-  caption(st, on_dark, STYLE_NOTES[[st]], y = 0.08)
+  caption(st, on_dark, STYLE_NOTES[[st]])
 }, ncol = 2, w = 3000, h = 2000)
 
 # --- 03 palettes: style held fixed, only the colors vary --------------------
